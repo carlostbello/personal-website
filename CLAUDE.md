@@ -117,6 +117,42 @@ personal-website/
    - `docs: update README`
    - `refactor: simplify contact form validation`
 
+### Creating Pull Requests (Automated)
+
+**Use the `/pr-workflow` command or `pr-workflow` skill for automated PR creation:**
+
+This automation handles:
+1. Pre-flight checks (verifies branch, commits, remote sync)
+2. Quality checks (lint, type-check, format, build)
+3. PR creation with structured format
+
+```bash
+# Simply run:
+/pr-workflow
+
+# Or invoke the skill:
+Use pr-workflow skill
+```
+
+**Benefits:**
+- Eliminates repetitive manual checks
+- Consistent PR format across all PRs
+- Catches issues before PR creation
+- Token efficient (optimized prompts)
+- Prevents failed CI runs
+
+**Manual alternative** (if automation not available):
+```bash
+# Run checks manually
+npm run lint && npm run type-check && npm run format:check && npm run build
+
+# Push branch
+git push -u origin your-branch-name
+
+# Create PR
+gh pr create --title "feat: your title" --body "..."
+```
+
 ### Git Practices
 - Create feature branches from `main`
 - Keep commits atomic and focused
