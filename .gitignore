@@ -50,3 +50,7 @@ Thumbs.db
 .claude/.cache/
 .claude/logs/
 .claude/temp/
+
+# Local TODO and notes (personal, not committed)
+TODO.md
+NOTES.md
