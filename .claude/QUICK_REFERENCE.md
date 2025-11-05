@@ -36,27 +36,47 @@ Automatically loaded MCP servers:
 ## Common Workflows
 
 ### Create a New Feature
-```
-1. @nextjs-architect help me plan the feature
-2. Implement the feature
-3. @code-reviewer review my implementation
-4. /security-scan
-5. /deploy-to-vercel
+```bash
+1. Create feature branch: git checkout -b feature/my-feature
+2. @nextjs-architect help me plan the feature
+3. Implement the feature
+4. @code-reviewer review my implementation
+5. Run checks: npm run lint && npm run type-check && npm run build
+6. /security-scan
+7. Commit changes: git add . && git commit -m "feat: description"
+8. /deploy-to-vercel (creates PR with preview)
 ```
 
 ### Fix a Security Issue
-```
-1. /security-scan
+```bash
+1. /security-scan (identify issues)
 2. @security-auditor analyze the specific issue
 3. Implement fixes
-4. /security-scan (verify fixes)
+4. Run checks: npm run lint && npm run type-check
+5. /security-scan (verify fixes)
+6. Commit and deploy
 ```
 
 ### Deploy to Production
+```bash
+1. Run all checks:
+   npm run lint
+   npm run type-check
+   npm run format:check
+   npm run build
+2. /deploy-to-vercel (creates PR with preview)
+3. Test preview deployment
+4. Merge PR (auto-deploys to production)
+5. Verify production deployment
 ```
-1. npm run build (test locally)
-2. /deploy-to-vercel
-3. Verify deployment
+
+### Create a New Page
+```bash
+1. /create-nextjs-page
+2. Answer prompts (route, route group, etc.)
+3. Customize the generated files
+4. Test locally: npm run dev
+5. Run checks and commit
 ```
 
 ## GitHub Integration
