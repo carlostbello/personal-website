@@ -275,7 +275,9 @@ personal-website/
 3. Format code with Prettier
 4. Review changes in git diff
 5. Write descriptive commit message
-6. Ensure no sensitive data is committed
+6. **CRITICAL**: Check for sensitive data (API keys, tokens, secrets)
+7. **DO NOT** include "Generated with Claude Code" or similar AI attribution in commits
+8. **DO NOT** include "Co-Authored-By: Claude" in commit messages
 
 ### Code Review Checklist
 - [ ] TypeScript types are correct

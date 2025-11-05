@@ -1,0 +1,155 @@
+#!/bin/bash
+#
+# Pre-push hook to check for sensitive data before pushing to remote
+# This prevents accidentally pushing API keys, secrets, tokens, etc.
+#
+# To install: cp .github/hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+# To bypass this hook (NOT RECOMMENDED), use: git push --no-verify
+#
+
+echo "🔒 Running pre-push security check..."
+
+# Get the remote name and URL
+remote="$1"
+url="$2"
+
+# Colors for output
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+# Flag to track if we found any issues
+issues_found=0
+
+# Read the commits being pushed
+while read local_ref local_sha remote_ref remote_sha
+do
+    # Skip if deleting a branch
+    if [ "$local_sha" = "0000000000000000000000000000000000000000" ]; then
+        continue
+    fi
+
+    # If remote_sha is all zeros, we're pushing a new branch
+    if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
+        # Check all commits in the branch
+        range="$local_sha"
+        # Get the default branch to compare against
+        default_branch=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
+        if [ -n "$default_branch" ] && git rev-parse "origin/$default_branch" >/dev/null 2>&1; then
+            range="origin/$default_branch..$local_sha"
+        fi
+    else
+        range="$remote_sha..$local_sha"
+    fi
+
+    echo "Checking commits: $range"
+
+    # Get list of changed files in the commits
+    files=$(git diff --name-only $range 2>/dev/null)
+
+    # Check 1: .env files (should never be committed)
+    if echo "$files" | grep -E "^\.env$|^\.env\.local$|^\.env\.production$|^\.env\.development$" >/dev/null; then
+        echo -e "${RED}❌ ERROR: .env file detected!${NC}"
+        echo "   Files found:"
+        echo "$files" | grep -E "^\.env" | sed 's/^/   - /'
+        echo ""
+        echo "   .env files should NEVER be committed!"
+        echo "   These files contain secrets and should be in .gitignore"
+        echo ""
+        issues_found=1
+    fi
+
+    # Check 2: Scan commit diffs for sensitive patterns
+    commits=$(git rev-list $range)
+
+    for commit in $commits; do
+        # Get the diff for this commit
+        diff=$(git show "$commit")
+
+        # Patterns to search for (case insensitive)
+        # API Keys
+        if echo "$diff" | grep -iE "^\+.*['\"]?api[_-]?key['\"]?\s*[:=]\s*['\"][a-zA-Z0-9_-]{20,}['\"]" >/dev/null; then
+            echo -e "${RED}❌ ERROR: Potential API key detected in commit $commit${NC}"
+            echo "   Pattern: api_key = \"...\""
+            issues_found=1
+        fi
+
+        # AWS Keys
+        if echo "$diff" | grep -E "^\+.*(AKIA[0-9A-Z]{16})" >/dev/null; then
+            echo -e "${RED}❌ ERROR: AWS Access Key detected in commit $commit${NC}"
+            echo "   AWS keys should never be committed!"
+            issues_found=1
+        fi
+
+        # Private Keys
+        if echo "$diff" | grep -E "^\+.*-----BEGIN (RSA |DSA )?PRIVATE KEY-----" >/dev/null; then
+            echo -e "${RED}❌ ERROR: Private key detected in commit $commit${NC}"
+            echo "   Private keys should never be committed!"
+            issues_found=1
+        fi
+
+        # Generic secrets patterns
+        if echo "$diff" | grep -iE "^\+.*(secret|password|token|bearer)['\"]?\s*[:=]\s*['\"][^'\"]{8,}['\"]" >/dev/null; then
+            echo -e "${YELLOW}⚠️  WARNING: Potential secret detected in commit $commit${NC}"
+            echo "   Found pattern matching: secret/password/token = \"...\""
+            echo "   Please review manually"
+            # Don't fail on this, just warn
+        fi
+
+        # GitHub tokens
+        if echo "$diff" | grep -E "^\+.*(ghp_[a-zA-Z0-9]{36}|github_pat_[a-zA-Z0-9]{22}_[a-zA-Z0-9]{59})" >/dev/null; then
+            echo -e "${RED}❌ ERROR: GitHub token detected in commit $commit${NC}"
+            echo "   GitHub tokens should never be committed!"
+            issues_found=1
+        fi
+
+        # Slack tokens
+        if echo "$diff" | grep -E "^\+.*xox[baprs]-[0-9a-zA-Z-]+" >/dev/null; then
+            echo -e "${RED}❌ ERROR: Slack token detected in commit $commit${NC}"
+            echo "   Slack tokens should never be committed!"
+            issues_found=1
+        fi
+
+        # Google API keys
+        if echo "$diff" | grep -E "^\+.*AIza[0-9A-Za-z_-]{35}" >/dev/null; then
+            echo -e "${RED}❌ ERROR: Google API key detected in commit $commit${NC}"
+            echo "   Google API keys should never be committed!"
+            issues_found=1
+        fi
+
+        # Generic high-entropy strings in new lines (potential secrets)
+        # This checks for long random-looking strings
+        if echo "$diff" | grep -E "^\+.*['\"][a-zA-Z0-9/+=]{40,}['\"]" >/dev/null; then
+            # Additional check: not in package-lock.json or similar
+            if ! echo "$files" | grep -E "package-lock.json|yarn.lock|pnpm-lock.yaml" >/dev/null; then
+                echo -e "${YELLOW}⚠️  WARNING: High-entropy string detected in commit $commit${NC}"
+                echo "   This might be a secret or token"
+                echo "   Please review manually"
+                # Don't fail on this, just warn
+            fi
+        fi
+    done
+done
+
+# Final result
+if [ $issues_found -eq 1 ]; then
+    echo ""
+    echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${RED}❌ PUSH REJECTED: Sensitive data detected!${NC}"
+    echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo "To fix this:"
+    echo "1. Remove the sensitive data from your commits"
+    echo "2. Use environment variables instead"
+    echo "3. Add secrets to .env.local (which is gitignored)"
+    echo "4. Rewrite git history if needed: git rebase -i"
+    echo ""
+    echo "To bypass this check (NOT RECOMMENDED):"
+    echo "   git push --no-verify"
+    echo ""
+    exit 1
+fi
+
+echo -e "${GREEN}✅ Security check passed! No sensitive data detected.${NC}"
+exit 0
