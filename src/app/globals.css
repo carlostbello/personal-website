@@ -149,8 +149,7 @@
     1px 1px 0px oklch(0.3 0 0),
     2px 2px 0px oklch(0.25 0 0),
     3px 3px 0px oklch(0.2 0 0),
-    /* Blue glow effect */
-    0 0 30px oklch(0.7 0.2 220 / 0.6),
+    /* Blue glow effect */ 0 0 30px oklch(0.7 0.2 220 / 0.6),
     0 0 60px oklch(0.7 0.2 220 / 0.4),
     0 0 90px oklch(0.7 0.2 220 / 0.2);
 }
@@ -165,7 +164,8 @@
 
 /* Circuit Line Animations */
 @keyframes circuit-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.2;
     stroke-width: 1;
   }
@@ -176,7 +176,8 @@
 }
 
 @keyframes node-glow {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.4;
     filter: drop-shadow(0 0 2px currentColor);
   }

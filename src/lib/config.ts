@@ -6,7 +6,8 @@
 export const siteConfig = {
   name: 'Carlos Bello',
   author: 'Carlos Bello',
-  description: 'Personal website and portfolio of Carlos Bello - Software Developer',
+  description:
+    'Personal website and portfolio of Carlos Bello - Software Developer',
 
   // Social Links
   social: {

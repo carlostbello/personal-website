@@ -13,7 +13,7 @@ export default function Home() {
       {/* Circuit Board Background */}
       <div className="circuit-bg absolute inset-0 -z-10" />
 
-      <div className="container relative flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center px-4 py-16">
+      <div className="relative container flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center px-4 py-16">
         {/* Hero Section with Name */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -33,12 +33,12 @@ export default function Home() {
           transition={{ duration: 0.6, delay: 0.3 }}
           className="mb-12 w-full max-w-2xl"
         >
-          <div className="rounded-lg border border-cyan-500/30 bg-background/80 p-6 backdrop-blur-sm shadow-lg shadow-cyan-500/10">
+          <div className="bg-background/80 rounded-lg border border-cyan-500/30 p-6 shadow-lg shadow-cyan-500/10 backdrop-blur-sm">
             <div className="mb-3 flex items-center gap-2">
               <div className="h-3 w-3 rounded-full bg-red-500" />
               <div className="h-3 w-3 rounded-full bg-yellow-500" />
               <div className="h-3 w-3 rounded-full bg-green-500" />
-              <span className="text-muted-foreground ml-2 text-xs font-mono">
+              <span className="text-muted-foreground ml-2 font-mono text-xs">
                 ~/portfolio
               </span>
             </div>
@@ -48,7 +48,7 @@ export default function Home() {
                   "> Hey, I'm Carlos. I like finding easier, smarter ways to get things done, whether I'm building, learning, or creating something new. I like turning ideas into things that people find useful. If you find this interesting, check out what I'm working on below.",
                   1000,
                 ]}
-                wrapper="pre"
+                wrapper="span"
                 speed={75}
                 className="whitespace-pre-wrap"
                 repeat={0}
@@ -70,7 +70,7 @@ export default function Home() {
             <motion.div
               whileHover={{ y: -8, scale: 1.02 }}
               transition={{ duration: 0.2 }}
-              className="button-card relative flex h-full flex-col items-center justify-center rounded-lg border-2 border-cyan-500/40 bg-background/60 p-8 backdrop-blur-sm transition-all hover:border-cyan-400 hover:bg-cyan-500/5 hover:shadow-xl hover:shadow-cyan-500/30"
+              className="button-card bg-background/60 relative flex h-full flex-col items-center justify-center rounded-lg border-2 border-cyan-500/40 p-8 backdrop-blur-sm transition-all hover:border-cyan-400 hover:bg-cyan-500/5 hover:shadow-xl hover:shadow-cyan-500/30"
             >
               <div className="mb-4 rounded-full border-2 border-cyan-500/50 p-4 transition-all group-hover:border-cyan-400 group-hover:shadow-lg group-hover:shadow-cyan-500/40">
                 <User className="h-8 w-8 text-cyan-400" />
@@ -87,7 +87,7 @@ export default function Home() {
             <motion.div
               whileHover={{ y: -8, scale: 1.02 }}
               transition={{ duration: 0.2 }}
-              className="button-card relative flex h-full flex-col items-center justify-center rounded-lg border-2 border-cyan-500/40 bg-background/60 p-8 backdrop-blur-sm transition-all hover:border-cyan-400 hover:bg-cyan-500/5 hover:shadow-xl hover:shadow-cyan-500/30"
+              className="button-card bg-background/60 relative flex h-full flex-col items-center justify-center rounded-lg border-2 border-cyan-500/40 p-8 backdrop-blur-sm transition-all hover:border-cyan-400 hover:bg-cyan-500/5 hover:shadow-xl hover:shadow-cyan-500/30"
             >
               <div className="mb-4 rounded-full border-2 border-cyan-500/50 p-4 transition-all group-hover:border-cyan-400 group-hover:shadow-lg group-hover:shadow-cyan-500/40">
                 <Code className="h-8 w-8 text-cyan-400" />
@@ -104,7 +104,7 @@ export default function Home() {
             <motion.div
               whileHover={{ y: -8, scale: 1.02 }}
               transition={{ duration: 0.2 }}
-              className="button-card relative flex h-full flex-col items-center justify-center rounded-lg border-2 border-cyan-500/40 bg-background/60 p-8 backdrop-blur-sm transition-all hover:border-cyan-400 hover:bg-cyan-500/5 hover:shadow-xl hover:shadow-cyan-500/30"
+              className="button-card bg-background/60 relative flex h-full flex-col items-center justify-center rounded-lg border-2 border-cyan-500/40 p-8 backdrop-blur-sm transition-all hover:border-cyan-400 hover:bg-cyan-500/5 hover:shadow-xl hover:shadow-cyan-500/30"
             >
               <div className="mb-4 rounded-full border-2 border-cyan-500/50 p-4 transition-all group-hover:border-cyan-400 group-hover:shadow-lg group-hover:shadow-cyan-500/40">
                 <Lightbulb className="h-8 w-8 text-cyan-400" />
@@ -128,7 +128,11 @@ export default function Home() {
             Want to work with me, chat about projects, or just say hi?
           </p>
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Button asChild variant="outline" className="glow-button w-full sm:w-auto">
+            <Button
+              asChild
+              variant="outline"
+              className="glow-button w-full sm:w-auto"
+            >
               <a
                 href={siteConfig.social.linkedin}
                 target="_blank"
@@ -138,13 +142,21 @@ export default function Home() {
                 LinkedIn
               </a>
             </Button>
-            <Button asChild variant="outline" className="glow-button w-full sm:w-auto">
+            <Button
+              asChild
+              variant="outline"
+              className="glow-button w-full sm:w-auto"
+            >
               <a href={siteConfig.social.email}>
                 <Mail className="mr-2 h-4 w-4" />
                 Email
               </a>
             </Button>
-            <Button asChild variant="outline" className="glow-button w-full sm:w-auto">
+            <Button
+              asChild
+              variant="outline"
+              className="glow-button w-full sm:w-auto"
+            >
               <a
                 href={siteConfig.social.github}
                 target="_blank"
