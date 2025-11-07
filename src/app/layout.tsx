@@ -24,11 +24,6 @@ export const metadata: Metadata = {
   keywords: ['Portfolio', 'Blog', 'Projects', 'Software Development'],
   authors: [{ name: siteConfig.author }],
   creator: siteConfig.author,
-  icons: {
-    icon: '/carlos-sprite.png',
-    shortcut: '/carlos-sprite.png',
-    apple: '/carlos-sprite.png',
-  },
   openGraph: {
     type: 'website',
     locale: 'en_US',
