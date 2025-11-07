@@ -1,65 +1,174 @@
-import Image from 'next/image'
+'use client'
+
+import Link from 'next/link'
+import { User, Code, Lightbulb, Github, Linkedin, Mail } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Button } from '@/components/ui/button'
+import { TypeAnimation } from 'react-type-animation'
+import { siteConfig } from '@/lib/config'
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between bg-white px-16 py-32 sm:items-start dark:bg-black">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl leading-10 font-semibold tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="relative min-h-[calc(100vh-4rem)]">
+      {/* Circuit Board Background */}
+      <div className="circuit-bg absolute inset-0 -z-10" />
+
+      <div className="relative container flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center px-4 py-16">
+        {/* Hero Section with Name */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="mb-6 text-center"
+        >
+          <h1 className="hero-title-embossed mb-6 text-5xl font-bold tracking-wider sm:text-6xl md:text-7xl lg:text-8xl">
+            Carlos Bello
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{' '}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+        </motion.div>
+
+        {/* Terminal/Code Intro Section with Typing Animation */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="mb-12 w-full max-w-2xl"
+        >
+          <div className="bg-background/80 rounded-lg border border-cyan-500/30 p-6 shadow-lg shadow-cyan-500/10 backdrop-blur-sm">
+            <div className="mb-3 flex items-center gap-2">
+              <div className="h-3 w-3 rounded-full bg-red-500" />
+              <div className="h-3 w-3 rounded-full bg-yellow-500" />
+              <div className="h-3 w-3 rounded-full bg-green-500" />
+              <span className="text-muted-foreground ml-2 font-mono text-xs">
+                ~/portfolio
+              </span>
+            </div>
+            <div className="font-mono text-sm leading-relaxed text-white">
+              <TypeAnimation
+                sequence={[
+                  "> Hey, I'm Carlos. I like finding easier, smarter ways to get things done, whether I'm building, learning, or creating something new. I like turning ideas into things that people find useful. If you find this interesting, check out what I'm working on below.",
+                  1000,
+                ]}
+                wrapper="span"
+                speed={75}
+                className="whitespace-pre-wrap"
+                repeat={0}
+                cursor={true}
+              />
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Three Cards Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+          className="mb-12 grid w-full max-w-5xl grid-cols-1 gap-8 sm:grid-cols-3"
+        >
+          {/* Card 1: I am */}
+          <Link href="/about" className="group block">
+            <motion.div
+              whileHover={{ y: -8, scale: 1.02 }}
+              transition={{ duration: 0.2 }}
+              className="button-card bg-background/60 relative flex h-full flex-col items-center justify-center rounded-lg border-2 border-cyan-500/40 p-8 backdrop-blur-sm transition-all hover:border-cyan-400 hover:bg-cyan-500/5 hover:shadow-xl hover:shadow-cyan-500/30"
             >
-              Templates
-            </a>{' '}
-            or the{' '}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              <div className="mb-4 rounded-full border-2 border-cyan-500/50 p-4 transition-all group-hover:border-cyan-400 group-hover:shadow-lg group-hover:shadow-cyan-500/40">
+                <User className="h-8 w-8 text-cyan-400" />
+              </div>
+              <h2 className="mb-2 text-xl font-bold sm:text-2xl">I am</h2>
+              <p className="text-muted-foreground text-center text-sm">
+                About me & my journey
+              </p>
+            </motion.div>
+          </Link>
+
+          {/* Card 2: I build */}
+          <Link href="/projects" className="group block">
+            <motion.div
+              whileHover={{ y: -8, scale: 1.02 }}
+              transition={{ duration: 0.2 }}
+              className="button-card bg-background/60 relative flex h-full flex-col items-center justify-center rounded-lg border-2 border-cyan-500/40 p-8 backdrop-blur-sm transition-all hover:border-cyan-400 hover:bg-cyan-500/5 hover:shadow-xl hover:shadow-cyan-500/30"
             >
-              Learning
-            </a>{' '}
-            center.
+              <div className="mb-4 rounded-full border-2 border-cyan-500/50 p-4 transition-all group-hover:border-cyan-400 group-hover:shadow-lg group-hover:shadow-cyan-500/40">
+                <Code className="h-8 w-8 text-cyan-400" />
+              </div>
+              <h2 className="mb-2 text-xl font-bold sm:text-2xl">I build</h2>
+              <p className="text-muted-foreground text-center text-sm">
+                Projects & creations
+              </p>
+            </motion.div>
+          </Link>
+
+          {/* Card 3: I think */}
+          <Link href="/blog" className="group block">
+            <motion.div
+              whileHover={{ y: -8, scale: 1.02 }}
+              transition={{ duration: 0.2 }}
+              className="button-card bg-background/60 relative flex h-full flex-col items-center justify-center rounded-lg border-2 border-cyan-500/40 p-8 backdrop-blur-sm transition-all hover:border-cyan-400 hover:bg-cyan-500/5 hover:shadow-xl hover:shadow-cyan-500/30"
+            >
+              <div className="mb-4 rounded-full border-2 border-cyan-500/50 p-4 transition-all group-hover:border-cyan-400 group-hover:shadow-lg group-hover:shadow-cyan-500/40">
+                <Lightbulb className="h-8 w-8 text-cyan-400" />
+              </div>
+              <h2 className="mb-2 text-xl font-bold sm:text-2xl">I think</h2>
+              <p className="text-muted-foreground text-center text-sm">
+                Writing & reflections
+              </p>
+            </motion.div>
+          </Link>
+        </motion.div>
+
+        {/* Contact CTA */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.8 }}
+          className="text-center"
+        >
+          <p className="text-muted-foreground mb-6 text-sm sm:text-base">
+            Want to work with me, chat about projects, or just say hi?
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="bg-foreground text-background flex h-12 w-full items-center justify-center gap-2 rounded-full px-5 transition-colors hover:bg-[#383838] md:w-[158px] dark:hover:bg-[#ccc]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] md:w-[158px] dark:border-white/[.145] dark:hover:bg-[#1a1a1a]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+          <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <Button
+              asChild
+              variant="outline"
+              className="glow-button w-full sm:w-auto"
+            >
+              <a
+                href={siteConfig.social.linkedin}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Linkedin className="mr-2 h-4 w-4" />
+                LinkedIn
+              </a>
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              className="glow-button w-full sm:w-auto"
+            >
+              <a href={siteConfig.social.email}>
+                <Mail className="mr-2 h-4 w-4" />
+                Email
+              </a>
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              className="glow-button w-full sm:w-auto"
+            >
+              <a
+                href={siteConfig.social.github}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Github className="mr-2 h-4 w-4" />
+                GitHub
+              </a>
+            </Button>
+          </div>
+        </motion.div>
+      </div>
     </div>
   )
 }

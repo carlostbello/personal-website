@@ -1,47 +1,46 @@
 import Link from 'next/link'
 import { Github, Linkedin, Twitter, Mail } from 'lucide-react'
+import { siteConfig } from '@/lib/config'
 
-const navigation = {
-  main: [
-    { name: 'Home', href: '/' },
-    { name: 'About', href: '/about' },
-    { name: 'Projects', href: '/projects' },
-    { name: 'Blog', href: '/blog' },
-    { name: 'Contact', href: '/contact' },
-  ],
-  social: [
-    {
-      name: 'GitHub',
-      href: 'https://github.com/carlostbello',
-      icon: Github,
-    },
-    {
-      name: 'LinkedIn',
-      href: 'https://linkedin.com/in/carlostbello',
-      icon: Linkedin,
-    },
-    {
-      name: 'Twitter',
-      href: 'https://twitter.com/carlostbello',
-      icon: Twitter,
-    },
-    {
-      name: 'Email',
-      href: 'mailto:hello@carlostbello.com',
-      icon: Mail,
-    },
-  ],
+const socialIcons = {
+  github: Github,
+  linkedin: Linkedin,
+  twitter: Twitter,
+  email: Mail,
 }
 
 export function Footer() {
   const currentYear = new Date().getFullYear()
+
+  const socialLinks = [
+    {
+      name: 'GitHub',
+      href: siteConfig.social.github,
+      icon: socialIcons.github,
+    },
+    {
+      name: 'LinkedIn',
+      href: siteConfig.social.linkedin,
+      icon: socialIcons.linkedin,
+    },
+    {
+      name: 'Twitter',
+      href: siteConfig.social.twitter,
+      icon: socialIcons.twitter,
+    },
+    {
+      name: 'Email',
+      href: siteConfig.social.email,
+      icon: socialIcons.email,
+    },
+  ]
 
   return (
     <footer className="bg-background border-t">
       <div className="container px-4 py-12">
         {/* Navigation Links */}
         <nav className="mb-8 flex flex-wrap justify-center gap-x-8 gap-y-4">
-          {navigation.main.map((item) => (
+          {siteConfig.navigation.map((item) => (
             <Link
               key={item.name}
               href={item.href}
@@ -54,7 +53,7 @@ export function Footer() {
 
         {/* Social Links */}
         <div className="mb-8 flex justify-center gap-6">
-          {navigation.social.map((item) => {
+          {socialLinks.map((item) => {
             const Icon = item.icon
             return (
               <Link
@@ -73,7 +72,7 @@ export function Footer() {
 
         {/* Copyright */}
         <p className="text-muted-foreground text-center text-sm">
-          &copy; {currentYear} Carlos Bello. All rights reserved.
+          &copy; {currentYear} {siteConfig.name}. All rights reserved.
         </p>
       </div>
     </footer>
