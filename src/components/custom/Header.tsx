@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useState } from 'react'
 import { Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -11,14 +12,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
-
-const navigation = [
-  { name: 'Home', href: '/' },
-  { name: 'About', href: '/about' },
-  { name: 'Projects', href: '/projects' },
-  { name: 'Blog', href: '/blog' },
-  { name: 'Contact', href: '/contact' },
-]
+import { siteConfig } from '@/lib/config'
 
 export function Header() {
   const [isOpen, setIsOpen] = useState(false)
@@ -27,13 +21,20 @@ export function Header() {
     <header className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full border-b backdrop-blur">
       <nav className="container flex h-16 items-center justify-between px-4">
         {/* Logo / Name */}
-        <Link href="/" className="text-xl font-bold hover:opacity-80">
-          Carlos Bello
+        <Link href="/" className="flex items-center gap-3 hover:opacity-80">
+          <Image
+            src="/carlos-sprite.png"
+            alt={siteConfig.name}
+            width={32}
+            height={32}
+            className="rounded-full"
+          />
+          <span className="text-xl font-bold">{siteConfig.name}</span>
         </Link>
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex md:items-center md:gap-6">
-          {navigation.map((item) => (
+          {siteConfig.navigation.map((item) => (
             <Link
               key={item.name}
               href={item.href}
@@ -56,7 +57,7 @@ export function Header() {
               <SheetTitle>Menu</SheetTitle>
             </SheetHeader>
             <div className="mt-8 flex flex-col gap-4">
-              {navigation.map((item) => (
+              {siteConfig.navigation.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { Header } from '@/components/custom/Header'
 import { Footer } from '@/components/custom/Footer'
+import { siteConfig } from '@/lib/config'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -14,33 +15,32 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 })
 
-const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'Carlos Bello'
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://localhost:3000'
-
 export const metadata: Metadata = {
   title: {
-    default: siteName,
-    template: `%s | ${siteName}`,
+    default: siteConfig.name,
+    template: `%s | ${siteConfig.name}`,
   },
-  description:
-    'Personal website and portfolio of Carlos Bello - Software Developer',
+  description: siteConfig.description,
   keywords: ['Portfolio', 'Blog', 'Projects', 'Software Development'],
-  authors: [{ name: 'Carlos Bello' }],
-  creator: 'Carlos Bello',
+  authors: [{ name: siteConfig.author }],
+  creator: siteConfig.author,
+  icons: {
+    icon: '/carlos-sprite.png',
+    shortcut: '/carlos-sprite.png',
+    apple: '/carlos-sprite.png',
+  },
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: siteUrl,
-    siteName: siteName,
-    title: siteName,
-    description:
-      'Personal website and portfolio of Carlos Bello - Software Developer',
+    url: siteConfig.url,
+    siteName: siteConfig.name,
+    title: siteConfig.name,
+    description: siteConfig.description,
   },
   twitter: {
     card: 'summary_large_image',
-    title: siteName,
-    description:
-      'Personal website and portfolio of Carlos Bello - Software Developer',
+    title: siteConfig.name,
+    description: siteConfig.description,
     creator: '@carlostbello',
   },
   robots: {
