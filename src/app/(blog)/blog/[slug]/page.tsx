@@ -4,7 +4,11 @@ import Link from 'next/link'
 import { Calendar, ArrowLeft, Tag } from 'lucide-react'
 import { MDXRemote } from 'next-mdx-remote/rsc'
 import { Button } from '@/components/ui/button'
-import { getAllPosts, getPostBySlug } from '@/lib/mdx'
+import {
+  getBlogPostBySlug,
+  getPublishedBlogPosts,
+  type BlogPostWithTags,
+} from '@/lib/supabase'
 import remarkGfm from 'remark-gfm'
 
 interface PageProps {
@@ -13,16 +17,12 @@ interface PageProps {
   }>
 }
 
-export async function generateStaticParams() {
-  const posts = getAllPosts()
-  return posts.map((post) => ({
-    slug: post.slug,
-  }))
-}
+// Note: generateStaticParams will be removed later since we're moving to dynamic routes
+// For now, we'll handle the slug directly
 
 export async function generateMetadata(props: PageProps): Promise<Metadata> {
   const params = await props.params
-  const post = getPostBySlug(params.slug)
+  const post = await getBlogPostBySlug(params.slug)
 
   if (!post) {
     return {
@@ -38,7 +38,7 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
 
 export default async function BlogPostPage(props: PageProps) {
   const params = await props.params
-  const post = getPostBySlug(params.slug)
+  const post = await getBlogPostBySlug(params.slug)
 
   if (!post) {
     notFound()
@@ -63,7 +63,9 @@ export default async function BlogPostPage(props: PageProps) {
           <div className="text-muted-foreground flex flex-wrap items-center gap-4 text-sm">
             <span className="flex items-center gap-1">
               <Calendar className="h-4 w-4" />
-              {new Date(post.date).toLocaleDateString('en-US', {
+              {new Date(
+                post.published_at || post.created_at
+              ).toLocaleDateString('en-US', {
                 month: 'long',
                 day: 'numeric',
                 year: 'numeric',
@@ -85,10 +87,10 @@ export default async function BlogPostPage(props: PageProps) {
               <Tag className="text-muted-foreground h-4 w-4" />
               {post.tags.map((tag) => (
                 <span
-                  key={tag}
+                  key={tag.id}
                   className="bg-muted text-muted-foreground rounded-md px-2 py-1 text-xs"
                 >
-                  {tag}
+                  {tag.name}
                 </span>
               ))}
             </div>
