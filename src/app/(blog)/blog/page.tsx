@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { getAllPosts } from '@/lib/mdx'
+import { getPublishedBlogPosts, type BlogPostWithTags } from '@/lib/supabase'
 
 export const metadata: Metadata = {
   title: 'Blog',
@@ -16,8 +16,8 @@ export const metadata: Metadata = {
     'Thoughts, tutorials, and insights on software development and technology.',
 }
 
-export default function BlogPage() {
-  const posts = getAllPosts()
+export default async function BlogPage() {
+  const posts = await getPublishedBlogPosts()
 
   return (
     <div className="container px-4 py-16">
@@ -51,7 +51,9 @@ export default function BlogPage() {
                     <div className="text-muted-foreground mb-2 flex flex-wrap items-center gap-4 text-sm">
                       <span className="flex items-center gap-1">
                         <Calendar className="h-4 w-4" />
-                        {new Date(post.date).toLocaleDateString('en-US', {
+                        {new Date(
+                          post.published_at || post.created_at
+                        ).toLocaleDateString('en-US', {
                           month: 'long',
                           day: 'numeric',
                           year: 'numeric',
@@ -76,10 +78,10 @@ export default function BlogPage() {
                         <Tag className="text-muted-foreground h-4 w-4" />
                         {post.tags.map((tag) => (
                           <span
-                            key={tag}
+                            key={tag.id}
                             className="bg-muted text-muted-foreground rounded-md px-2 py-1 text-xs"
                           >
-                            {tag}
+                            {tag.name}
                           </span>
                         ))}
                       </div>

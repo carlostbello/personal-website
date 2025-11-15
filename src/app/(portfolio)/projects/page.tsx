@@ -1,6 +1,3 @@
-'use client'
-
-import { useState } from 'react'
 import { ExternalLink, Github } from 'lucide-react'
 import {
   Card,
@@ -10,9 +7,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { getProjects, type Project } from '@/lib/projects'
-
-const projects = getProjects()
+import { getPublishedProjects, type ProjectWithTags } from '@/lib/supabase'
 
 const categories = [
   { id: 'all', label: 'All Projects' },
@@ -22,13 +17,8 @@ const categories = [
   { id: 'other', label: 'Other' },
 ] as const
 
-export default function ProjectsPage() {
-  const [selectedCategory, setSelectedCategory] = useState<string>('all')
-
-  const filteredProjects =
-    selectedCategory === 'all'
-      ? projects
-      : projects.filter((project) => project.category === selectedCategory)
+export default async function ProjectsPage() {
+  const projects = await getPublishedProjects()
 
   return (
     <div className="container px-4 py-16">
@@ -44,31 +34,15 @@ export default function ProjectsPage() {
         </p>
       </section>
 
-      {/* Filter Tabs */}
-      <section className="mb-8">
-        <div className="flex flex-wrap justify-center gap-2">
-          {categories.map((category) => (
-            <Button
-              key={category.id}
-              variant={selectedCategory === category.id ? 'default' : 'outline'}
-              onClick={() => setSelectedCategory(category.id)}
-              className="transition-all"
-            >
-              {category.label}
-            </Button>
-          ))}
-        </div>
-      </section>
-
       {/* Projects Grid */}
       <section>
-        {filteredProjects.length === 0 ? (
+        {projects.length === 0 ? (
           <div className="text-muted-foreground py-16 text-center">
-            <p>No projects found in this category.</p>
+            <p>No projects found.</p>
           </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredProjects.map((project) => (
+            {projects.map((project) => (
               <ProjectCard key={project.id} project={project} />
             ))}
           </div>
@@ -78,7 +52,7 @@ export default function ProjectsPage() {
   )
 }
 
-function ProjectCard({ project }: { project: Project }) {
+function ProjectCard({ project }: { project: ProjectWithTags }) {
   return (
     <Card className="group transition-all hover:shadow-lg hover:shadow-cyan-500/10">
       <CardHeader>
@@ -107,10 +81,10 @@ function ProjectCard({ project }: { project: Project }) {
 
         {/* Links */}
         <div className="flex gap-2">
-          {project.links.github && (
+          {project.github_url && (
             <Button variant="outline" size="sm" asChild className="flex-1">
               <a
-                href={project.links.github}
+                href={project.github_url}
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -119,10 +93,10 @@ function ProjectCard({ project }: { project: Project }) {
               </a>
             </Button>
           )}
-          {project.links.demo && (
+          {project.demo_url && (
             <Button variant="outline" size="sm" asChild className="flex-1">
               <a
-                href={project.links.demo}
+                href={project.demo_url}
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -131,10 +105,10 @@ function ProjectCard({ project }: { project: Project }) {
               </a>
             </Button>
           )}
-          {project.links.website && (
+          {project.website_url && (
             <Button variant="outline" size="sm" asChild className="flex-1">
               <a
-                href={project.links.website}
+                href={project.website_url}
                 target="_blank"
                 rel="noopener noreferrer"
               >
