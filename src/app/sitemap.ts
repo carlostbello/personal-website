@@ -1,8 +1,8 @@
 import { MetadataRoute } from 'next'
-import { getAllPosts } from '@/lib/mdx'
+import { getPublishedBlogPosts } from '@/lib/supabase/queries'
 import { siteConfig } from '@/lib/config'
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = siteConfig.url
 
   // Static pages
@@ -39,11 +39,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ]
 
-  // Blog posts
-  const posts = getAllPosts()
+  // Blog posts from Supabase
+  const posts = await getPublishedBlogPosts()
   const blogPages = posts.map((post) => ({
     url: `${baseUrl}/blog/${post.slug}`,
-    lastModified: new Date(post.date),
+    lastModified: new Date(post.published_at || post.created_at),
     changeFrequency: 'monthly' as const,
     priority: 0.6,
   }))
