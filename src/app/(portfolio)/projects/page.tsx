@@ -9,14 +9,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { getPublishedProjects, type ProjectWithTags } from '@/lib/supabase'
 
-const categories = [
-  { id: 'all', label: 'All Projects' },
-  { id: 'web', label: 'Web Apps' },
-  { id: 'mobile', label: 'Mobile Apps' },
-  { id: 'tool', label: 'Dev Tools' },
-  { id: 'other', label: 'Other' },
-] as const
-
 export default async function ProjectsPage() {
   const projects = await getPublishedProjects()
 

@@ -4,11 +4,7 @@ import Link from 'next/link'
 import { Calendar, ArrowLeft, Tag } from 'lucide-react'
 import { MDXRemote } from 'next-mdx-remote/rsc'
 import { Button } from '@/components/ui/button'
-import {
-  getBlogPostBySlug,
-  getPublishedBlogPosts,
-  type BlogPostWithTags,
-} from '@/lib/supabase'
+import { getBlogPostBySlug } from '@/lib/supabase'
 import remarkGfm from 'remark-gfm'
 
 interface PageProps {

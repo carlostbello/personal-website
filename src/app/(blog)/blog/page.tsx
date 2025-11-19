@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { getPublishedBlogPosts, type BlogPostWithTags } from '@/lib/supabase'
+import { getPublishedBlogPosts } from '@/lib/supabase'
 
 export const metadata: Metadata = {
   title: 'Blog',
