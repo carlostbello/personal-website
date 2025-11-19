@@ -21,7 +21,7 @@ export async function submitContactForm(data: ContactFormData) {
     const resend = new Resend(process.env.RESEND_API_KEY)
 
     const emailFrom = process.env.EMAIL_FROM || 'onboarding@resend.dev'
-    const emailTo = process.env.EMAIL_TO || 'carlo@example.com' // Fallback for safety
+    const emailTo = process.env.EMAIL_TO || 'carlostbello+contact@outlook.com'
 
     // Send the email
     const { error } = await resend.emails.send({

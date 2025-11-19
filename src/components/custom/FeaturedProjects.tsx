@@ -79,7 +79,7 @@ export function FeaturedProjects({ projects }: FeaturedProjectsProps) {
                             </CardContent>
 
                             <CardFooter className="flex gap-2">
-                                <Button asChild variant="outline" size="sm" className="w-full">
+                                <Button asChild variant="outline" size="sm" className="flex-1">
                                     <Link href={`/projects/${project.slug}`}>
                                         View Details <ArrowRight className="ml-2 h-4 w-4" />
                                     </Link>
