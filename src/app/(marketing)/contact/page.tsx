@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Mail, Send, Github, Linkedin, Twitter } from 'lucide-react'
+// Mail is commented out until Cloudflare Email Routing is configured
+import { Send, Github, Linkedin, Twitter } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -156,6 +157,7 @@ export default function ContactPage() {
 
         {/* Contact Info & Social */}
         <div className="space-y-6">
+          {/* TODO: Uncomment once Cloudflare Email Routing is configured
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -175,6 +177,7 @@ export default function ContactPage() {
               </div>
             </CardContent>
           </Card>
+          */}
 
           <Card>
             <CardHeader>

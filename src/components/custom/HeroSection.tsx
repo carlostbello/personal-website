@@ -147,10 +147,10 @@ export function HeroSection() {
                             variant="outline"
                             className="glow-button w-full sm:w-auto"
                         >
-                            <a href={siteConfig.social.email}>
+                            <Link href={siteConfig.social.email}>
                                 <Mail className="mr-2 h-4 w-4" />
-                                Email
-                            </a>
+                                Contact
+                            </Link>
                         </Button>
                         <Button
                             asChild

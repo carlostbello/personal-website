@@ -17,21 +17,25 @@ export function Footer() {
       name: 'GitHub',
       href: siteConfig.social.github,
       icon: socialIcons.github,
+      external: true,
     },
     {
       name: 'LinkedIn',
       href: siteConfig.social.linkedin,
       icon: socialIcons.linkedin,
+      external: true,
     },
     {
       name: 'Twitter',
       href: siteConfig.social.twitter,
       icon: socialIcons.twitter,
+      external: true,
     },
     {
-      name: 'Email',
+      name: 'Contact',
       href: siteConfig.social.email,
       icon: socialIcons.email,
+      external: false,
     },
   ]
 
@@ -59,8 +63,10 @@ export function Footer() {
               <Link
                 key={item.name}
                 href={item.href}
-                target="_blank"
-                rel="noopener noreferrer"
+                {...(item.external && {
+                  target: '_blank',
+                  rel: 'noopener noreferrer',
+                })}
                 className="text-muted-foreground hover:text-foreground"
                 aria-label={item.name}
               >
