@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { User, Code, Lightbulb, Heart, Globe } from 'lucide-react'
+import { User, Code, Lightbulb, Heart, Globe, Brain, Shield, Rocket } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export const metadata: Metadata = {
@@ -30,16 +30,42 @@ export default function AboutPage() {
               The Journey
             </CardTitle>
           </CardHeader>
-          <CardContent className="prose prose-neutral dark:prose-invert leading-relaxed">
-            <p>
-              I operate at the intersection of innovation and reliability. My work involves pioneering AI strategies and delivering scalable solutions for large enterprise clients. I enjoy being hands-on with the code while also guiding technical strategy from concept to deployment.
-            </p>
-            <p>
-              A lot of my recent focus has been on AI Security and disconnected environments. I specialize in architecting RAG pipelines and intelligent systems where standard cloud solutions are not an option. I also love sharing this knowledge by speaking at cybersecurity conferences about the operational realities of AI.
-            </p>
-            <p>
-              But for me, software is not just a career. It is a genuine obsession. I believe the best engineers are &quot;Makers&quot; at heart. That curiosity does not turn off when I clock out. It just shifts focus to the next project in the lab.
-            </p>
+          <CardContent className="grid gap-6">
+            <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-500">
+                <Brain className="h-5 w-5" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="font-medium leading-none">The Philosophy</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  I operate at the intersection of innovation and reliability. My work involves pioneering AI strategies and delivering scalable solutions for large enterprise clients. I enjoy being hands-on with the code while also guiding technical strategy from concept to deployment.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-500">
+                <Shield className="h-5 w-5" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="font-medium leading-none">The Specialization</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  A lot of my recent focus has been on AI Security and disconnected environments. I specialize in architecting RAG pipelines and intelligent systems where standard cloud solutions are not an option. I also love sharing this knowledge by speaking at cybersecurity conferences about the operational realities of AI.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-rose-500/10 text-rose-500">
+                <Rocket className="h-5 w-5" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="font-medium leading-none">The Drive</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  But for me, software is not just a career. It is a genuine obsession. I believe the best engineers are &quot;Makers&quot; at heart. That curiosity does not turn off when I clock out. It just shifts focus to the next project in the lab.
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </section>
