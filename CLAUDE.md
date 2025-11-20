@@ -306,9 +306,9 @@ gh pr create --title "feat: your title" --body "..."
 8. Test accessibility
 
 ### Before Committing Code
-1. **ALWAYS** run: `npm run lint && npm run type-check && npm run build`
+1. **ALWAYS** run: `npm run format && npm run lint && npm run type-check && npm run build`
 2. Fix all errors and warnings
-3. Format code with Prettier
+3. **CRITICAL**: Run `npm run format` to fix Prettier formatting issues before every commit
 4. Review changes in git diff
 5. Write descriptive commit message
 6. **CRITICAL**: Check for sensitive data (API keys, tokens, secrets)
