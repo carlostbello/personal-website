@@ -79,11 +79,22 @@ export function FeaturedProjects({ projects }: FeaturedProjectsProps) {
               </CardContent>
 
               <CardFooter className="flex gap-2">
-                <Button asChild variant="outline" size="sm" className="flex-1">
-                  <Link href={`/projects/${project.slug}`}>
-                    View Details <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
+                {project.website_url && (
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                  >
+                    <a
+                      href={project.website_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Visit Site <ExternalLink className="ml-2 h-4 w-4" />
+                    </a>
+                  </Button>
+                )}
                 {project.github_url && (
                   <Button asChild variant="ghost" size="icon">
                     <a
@@ -93,18 +104,6 @@ export function FeaturedProjects({ projects }: FeaturedProjectsProps) {
                       aria-label="GitHub"
                     >
                       <Github className="h-4 w-4" />
-                    </a>
-                  </Button>
-                )}
-                {project.demo_url && (
-                  <Button asChild variant="ghost" size="icon">
-                    <a
-                      href={project.demo_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label="Live Demo"
-                    >
-                      <ExternalLink className="h-4 w-4" />
                     </a>
                   </Button>
                 )}
