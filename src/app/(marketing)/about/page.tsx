@@ -17,9 +17,7 @@ export default function AboutPage() {
           About Me
         </h1>
         <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
-          Building smarter systems, from enterprise AI architectures to recycled
-          homelabs. I am an engineer who solves hard problems with code, whether
-          it is for a major organization or my espresso machine.
+          Building smarter systems, from enterprise AI architectures to recycled homelabs. I am an engineer who solves hard problems with code, whether it is for a major organization or my espresso machine.
         </p>
       </section>
 
@@ -32,27 +30,15 @@ export default function AboutPage() {
               The Journey
             </CardTitle>
           </CardHeader>
-          <CardContent className="prose prose-neutral dark:prose-invert max-w-none">
+          <CardContent className="prose prose-neutral dark:prose-invert leading-relaxed">
             <p>
-              I operate at the intersection of innovation and reliability. My work
-              involves pioneering AI strategies and delivering scalable solutions
-              for large enterprise clients. I enjoy being hands-on
-              with the code while also guiding technical strategy from concept to
-              deployment.
+              I operate at the intersection of innovation and reliability. My work involves pioneering AI strategies and delivering scalable solutions for large enterprise clients. I enjoy being hands-on with the code while also guiding technical strategy from concept to deployment.
             </p>
             <p>
-              A lot of my recent focus has been on AI Security and disconnected
-              environments. I specialize in architecting RAG pipelines and
-              intelligent systems where standard cloud solutions are not an
-              option. I also love sharing this knowledge by speaking at
-              cybersecurity conferences about the operational realities of
-              AI.
+              A lot of my recent focus has been on AI Security and disconnected environments. I specialize in architecting RAG pipelines and intelligent systems where standard cloud solutions are not an option. I also love sharing this knowledge by speaking at cybersecurity conferences about the operational realities of AI.
             </p>
             <p>
-              But for me, software is not just a career. It is a genuine
-              obsession. I believe the best engineers are &quot;Makers&quot; at
-              heart. That curiosity does not turn off when I clock out. It just
-              shifts focus to the next project in the lab.
+              But for me, software is not just a career. It is a genuine obsession. I believe the best engineers are &quot;Makers&quot; at heart. That curiosity does not turn off when I clock out. It just shifts focus to the next project in the lab.
             </p>
           </CardContent>
         </Card>
@@ -150,31 +136,25 @@ export default function AboutPage() {
               <div>
                 <h3 className="mb-2 font-semibold">The Homelab</h3>
                 <p className="text-muted-foreground text-sm">
-                  I build servers from recycled computers. It is my personal
-                  playground for testing distributed systems and breaking things
-                  safely.
+                  I build servers from recycled computers. It is my personal playground for testing distributed systems and breaking things safely.
                 </p>
               </div>
               <div>
                 <h3 className="mb-2 font-semibold">The Maker Mindset</h3>
                 <p className="text-muted-foreground text-sm">
-                  Bridging code and the physical world through 3D printing,
-                  circuit building, and hardware integration.
+                  Bridging code and the physical world through 3D printing, circuit building, and hardware integration.
                 </p>
               </div>
               <div>
                 <h3 className="mb-2 font-semibold">Smart Coffee</h3>
                 <p className="text-muted-foreground text-sm">
-                  Yes, I modded my espresso machine with an Arduino. Because if
-                  you cannot graph your extraction pressure, are you even
-                  caffeinated?
+                  Yes, I modded my espresso machine with an Arduino. Because if you cannot graph your extraction pressure, are you even caffeinated?
                 </p>
               </div>
               <div>
                 <h3 className="mb-2 font-semibold">Music & Audio</h3>
                 <p className="text-muted-foreground text-sm">
-                  I collect guitars, basses, and recording gear. I love the
-                  technical side of audio production just as much as playing.
+                  I collect guitars, basses, and recording gear. I love the technical side of audio production just as much as playing.
                 </p>
               </div>
             </div>
