@@ -1,5 +1,14 @@
 import type { Metadata } from 'next'
-import { User, Code, Lightbulb, Heart, Globe, Brain, Shield, Rocket } from 'lucide-react'
+import {
+  User,
+  Code,
+  Lightbulb,
+  Heart,
+  Globe,
+  Brain,
+  Shield,
+  Rocket,
+} from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export const metadata: Metadata = {
@@ -17,7 +26,9 @@ export default function AboutPage() {
           About Me
         </h1>
         <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
-          Building smarter systems, from enterprise AI architectures to recycled homelabs. I am an engineer who solves hard problems with code, whether it is for a major organization or my espresso machine.
+          Building smarter systems, from enterprise AI architectures to recycled
+          homelabs. I am an engineer who solves hard problems with code, whether
+          it is for a major organization or my espresso machine.
         </p>
       </section>
 
@@ -36,9 +47,13 @@ export default function AboutPage() {
                 <Brain className="h-5 w-5" />
               </div>
               <div className="space-y-1">
-                <h3 className="font-medium leading-none">The Philosophy</h3>
+                <h3 className="leading-none font-medium">The Philosophy</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">
-                  I operate at the intersection of innovation and reliability. My work involves pioneering AI strategies and delivering scalable solutions for large enterprise clients. I enjoy being hands-on with the code while also guiding technical strategy from concept to deployment.
+                  I operate at the intersection of innovation and reliability.
+                  My work involves pioneering AI strategies and delivering
+                  scalable solutions for large enterprise clients. I enjoy being
+                  hands-on with the code while also guiding technical strategy
+                  from concept to deployment.
                 </p>
               </div>
             </div>
@@ -48,9 +63,14 @@ export default function AboutPage() {
                 <Shield className="h-5 w-5" />
               </div>
               <div className="space-y-1">
-                <h3 className="font-medium leading-none">The Specialization</h3>
+                <h3 className="leading-none font-medium">The Specialization</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">
-                  A lot of my recent focus has been on AI Security and disconnected environments. I specialize in architecting RAG pipelines and intelligent systems where standard cloud solutions are not an option. I also love sharing this knowledge by speaking at cybersecurity conferences about the operational realities of AI.
+                  A lot of my recent focus has been on AI Security and
+                  disconnected environments. I specialize in architecting RAG
+                  pipelines and intelligent systems where standard cloud
+                  solutions are not an option. I also love sharing this
+                  knowledge by speaking at cybersecurity conferences about the
+                  operational realities of AI.
                 </p>
               </div>
             </div>
@@ -60,9 +80,12 @@ export default function AboutPage() {
                 <Rocket className="h-5 w-5" />
               </div>
               <div className="space-y-1">
-                <h3 className="font-medium leading-none">The Drive</h3>
+                <h3 className="leading-none font-medium">The Drive</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">
-                  But for me, software is not just a career. It is a genuine obsession. I believe the best engineers are &quot;Makers&quot; at heart. That curiosity does not turn off when I clock out. It just shifts focus to the next project in the lab.
+                  But for me, software is not just a career. It is a genuine
+                  obsession. I believe the best engineers are &quot;Makers&quot;
+                  at heart. That curiosity does not turn off when I clock out.
+                  It just shifts focus to the next project in the lab.
                 </p>
               </div>
             </div>
@@ -162,25 +185,31 @@ export default function AboutPage() {
               <div>
                 <h3 className="mb-2 font-semibold">The Homelab</h3>
                 <p className="text-muted-foreground text-sm">
-                  I build servers from recycled computers. It is my personal playground for testing distributed systems and breaking things safely.
+                  I build servers from recycled computers. It is my personal
+                  playground for testing distributed systems and breaking things
+                  safely.
                 </p>
               </div>
               <div>
                 <h3 className="mb-2 font-semibold">The Maker Mindset</h3>
                 <p className="text-muted-foreground text-sm">
-                  Bridging code and the physical world through 3D printing, circuit building, and hardware integration.
+                  Bridging code and the physical world through 3D printing,
+                  circuit building, and hardware integration.
                 </p>
               </div>
               <div>
                 <h3 className="mb-2 font-semibold">Smart Coffee</h3>
                 <p className="text-muted-foreground text-sm">
-                  Yes, I modded my espresso machine with an Arduino. Because if you cannot graph your extraction pressure, are you even caffeinated?
+                  Yes, I modded my espresso machine with an Arduino. Because if
+                  you cannot graph your extraction pressure, are you even
+                  caffeinated?
                 </p>
               </div>
               <div>
                 <h3 className="mb-2 font-semibold">Music & Audio</h3>
                 <p className="text-muted-foreground text-sm">
-                  I collect guitars, basses, and recording gear. I love the technical side of audio production just as much as playing.
+                  I collect guitars, basses, and recording gear. I love the
+                  technical side of audio production just as much as playing.
                 </p>
               </div>
             </div>
