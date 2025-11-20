@@ -14,8 +14,8 @@ export const siteConfig = {
     github: 'https://github.com/carlostbello',
     linkedin: 'https://www.linkedin.com/in/carlos-t-bello/',
     twitter: 'https://twitter.com/carlostbello',
-    email: 'mailto:hello@carlostbello.com',
-    emailAddress: 'hello@carlostbello.com', // For display purposes
+    // TODO: Set up Cloudflare Email Routing, then change to mailto:contact@carlostbello.com
+    email: '/contact',
   },
 
   // Navigation Links

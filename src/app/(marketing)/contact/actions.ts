@@ -7,17 +7,50 @@ export async function submitContactForm(data: ContactFormData) {
     // Validate the data
     const validatedData = contactFormSchema.parse(data)
 
-    // TODO: Implement actual email sending
-    // Options:
-    // 1. Resend (recommended): https://resend.com
-    // 2. SendGrid: https://sendgrid.com
-    // 3. Nodemailer: https://nodemailer.com
+    // Check for API key
+    if (!process.env.RESEND_API_KEY) {
+      console.error('RESEND_API_KEY is not defined')
+      return {
+        success: false,
+        message: 'Email service is not configured. Please try again later.',
+      }
+    }
 
-    // For now, just log the data (remove this in production)
-    console.log('Contact form submission:', validatedData)
+    // Initialize Resend
+    const { Resend } = await import('resend')
+    const resend = new Resend(process.env.RESEND_API_KEY)
 
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const emailFrom = process.env.EMAIL_FROM || 'onboarding@resend.dev'
+    const emailTo = process.env.EMAIL_TO || 'carlostbello+contact@outlook.com'
+
+    // Send the email
+    const { error } = await resend.emails.send({
+      from: emailFrom,
+      to: emailTo,
+      subject: `New Contact Form Submission: ${validatedData.name}`,
+      text: `
+Name: ${validatedData.name}
+Email: ${validatedData.email}
+Message:
+${validatedData.message}
+      `,
+      // HTML version
+      html: `
+        <h2>New Contact Form Submission</h2>
+        <p><strong>Name:</strong> ${validatedData.name}</p>
+        <p><strong>Email:</strong> ${validatedData.email}</p>
+        <p><strong>Message:</strong></p>
+        <p>${validatedData.message.replace(/\n/g, '<br>')}</p>
+      `,
+    })
+
+    if (error) {
+      console.error('Resend error:', error)
+      return {
+        success: false,
+        message: 'Failed to send message. Please try again.',
+      }
+    }
 
     // Return success
     return {
