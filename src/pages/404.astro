@@ -1,0 +1,39 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import avatar from '../assets/avatar.png';
+---
+<Base title="Not found" description="This page does not exist.">
+  <section class="wrap lost">
+    <div>
+      <h1 class="lettering">404</h1>
+      <p class="balloon" data-tail="left">TK Nothing here. Try the <a href="/">front page</a> or the <a href="/log">log</a>.</p>
+    </div>
+    <Image src={avatar} alt="" width={300} height={300} class="me" />
+  </section>
+</Base>
+
+<style>
+  .lost {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    border-bottom: var(--line) solid var(--ink);
+    padding-top: 40px;
+  }
+  h1 {
+    font-size: clamp(6rem, 22vw, 16rem);
+  }
+  .balloon {
+    max-width: 360px;
+    margin-bottom: 40px;
+  }
+  .me {
+    width: min(300px, 40vw);
+    height: auto;
+    margin-bottom: -2px;
+    transform: scaleX(-1) rotate(-6deg);
+    transform-origin: 50% 100%;
+  }
+</style>

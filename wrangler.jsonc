@@ -1,0 +1,11 @@
+{
+  // Static site served from Workers Static Assets. No Worker code runs per request.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "carlostbello-com",
+  "compatibility_date": "2026-10-19",
+  "assets": {
+    "directory": "./dist",
+    "html_handling": "drop-trailing-slash",
+    "not_found_handling": "404-page"
+  }
+}

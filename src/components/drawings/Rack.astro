@@ -1,0 +1,31 @@
+---
+// A homelab rack: mismatched recycled boxes, activity LEDs.
+---
+<svg viewBox="0 0 220 180" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" data-ink class="rack" aria-hidden="true">
+  <rect x="50" y="12" width="120" height="160" />
+  <rect x="60" y="24" width="100" height="26" />
+  <rect x="60" y="56" width="100" height="18" />
+  <rect x="60" y="80" width="100" height="40" />
+  <rect x="60" y="126" width="100" height="18" />
+  <path d="M110 30v14M118 30v14M126 30v14M134 30v14" />
+  <path d="M100 92h46M100 100h46M100 108h46" />
+  <path d="M40 172h140" />
+  <circle class="led" cx="70" cy="37" r="3.5" />
+  <circle class="led" cx="70" cy="65" r="3.5" style="animation-delay:-.4s" />
+  <circle class="led" cx="70" cy="135" r="3.5" style="animation-delay:-.9s" />
+</svg>
+
+<style>
+  .led {
+    fill: var(--orange);
+    animation: blink 1.3s steps(1) infinite;
+  }
+  .led:nth-of-type(2) {
+    animation-duration: 0.7s;
+  }
+  @keyframes blink {
+    50% {
+      fill: var(--page);
+    }
+  }
+</style>

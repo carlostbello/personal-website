@@ -1,0 +1,47 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import '../styles/global.css';
+import InkDefs from '../components/InkDefs.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import Seo from '../components/Seo.astro';
+
+type Props = import('astro/types').ComponentProps<typeof Seo>;
+const seo = Astro.props;
+
+// Comic panel wipe between pages (keyframes live in global.css).
+const wipe = {
+  forwards: {
+    old: { name: 'panel-out', duration: '0.28s', easing: 'cubic-bezier(.6,0,.9,.4)', fillMode: 'both' },
+    new: { name: 'panel-in', duration: '0.42s', easing: 'cubic-bezier(.2,.9,.1,1)', fillMode: 'both' },
+  },
+  backwards: {
+    old: { name: 'panel-out', duration: '0.28s', easing: 'cubic-bezier(.6,0,.9,.4)', fillMode: 'both', direction: 'reverse' },
+    new: { name: 'panel-in', duration: '0.42s', easing: 'cubic-bezier(.2,.9,.1,1)', fillMode: 'both', direction: 'reverse' },
+  },
+};
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#3b5a8c" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <Seo {...seo} />
+    <script is:inline>document.documentElement.classList.add('js');</script>
+    <ClientRouter />
+  </head>
+  <body>
+    <InkDefs />
+    <Nav transition:animate="none" />
+    <main transition:animate={wipe}>
+      <slot />
+    </main>
+    <Footer transition:animate="none" />
+    <script>
+      import '../scripts/motion';
+    </script>
+  </body>
+</html>

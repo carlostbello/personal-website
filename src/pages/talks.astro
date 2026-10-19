@@ -1,0 +1,75 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import PageHead from '../components/PageHead.astro';
+import { site } from '../lib/site';
+
+const talks = (await getCollection('talks')).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const fmt = new Intl.DateTimeFormat('en', { year: 'numeric', month: 'short', timeZone: 'UTC' });
+
+const ld = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: site.name,
+  url: site.url,
+  sameAs: Object.values(site.social),
+};
+---
+<Base title="Talks" description="TK Conference talks by Carlos Bello on AI security and offline AI systems." jsonLd={ld}>
+  <PageHead title="Talks" say="TK Where I've been on stage." />
+  <div class="wrap">
+    <ul class="talks">
+      {talks.map((t, i) => (
+        <li class:list={['panel', { orange: i === 0 }]}>
+          <span class="caption">{fmt.format(t.data.date)}</span>
+          <h2>{t.data.title}</h2>
+          <p>{t.data.event}{t.data.city && `, ${t.data.city}`}</p>
+          <p class="links">
+            {t.data.slides && <a href={t.data.slides}>Slides</a>}
+            {t.data.video && <a href={t.data.video}>Video</a>}
+          </p>
+        </li>
+      ))}
+    </ul>
+    <p class="invite">Want me to speak at your event? <a href={`mailto:${site.email}`}>{site.email}</a></p>
+  </div>
+</Base>
+
+<style>
+  .talks {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: calc(var(--gutter) * 1.6);
+    max-width: 900px;
+  }
+  .talks li {
+    padding-top: 50px;
+  }
+  .talks li:nth-child(even) {
+    margin-left: clamp(0px, 6vw, 80px);
+  }
+  .orange {
+    background: var(--orange);
+  }
+  h2 {
+    font-family: var(--f-letter);
+    font-size: clamp(1.5rem, 3.4vw, 2.3rem);
+    line-height: 1.05;
+    margin-bottom: 8px;
+  }
+  .links {
+    display: flex;
+    gap: 16px;
+    margin: 0;
+    font-weight: 700;
+  }
+  .links:empty {
+    display: none;
+  }
+  .invite {
+    margin-top: 40px;
+    font-weight: 700;
+  }
+</style>

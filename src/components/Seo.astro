@@ -1,0 +1,33 @@
+---
+import { site } from '../lib/site';
+
+interface Props {
+  title?: string;
+  description?: string;
+  type?: 'website' | 'article';
+  published?: Date;
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+}
+
+const { title, description = site.description, type = 'website', published, jsonLd } = Astro.props;
+const fullTitle = title ? `${title} · ${site.name}` : site.name;
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const image = new URL('/icon-512.png', Astro.site).href;
+const ld = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
+---
+<title>{fullTitle}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+<link rel="alternate" type="application/rss+xml" title={`${site.name} · Log`} href="/rss.xml" />
+<link rel="sitemap" href="/sitemap-index.xml" />
+
+<meta property="og:type" content={type} />
+<meta property="og:title" content={title ?? site.name} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:image" content={image} />
+<meta property="og:site_name" content={site.name} />
+{published && <meta property="article:published_time" content={published.toISOString()} />}
+<meta name="twitter:card" content="summary" />
+
+{ld.map((data) => <script type="application/ld+json" set:html={JSON.stringify(data)} />)}

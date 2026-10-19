@@ -1,0 +1,43 @@
+---
+interface Props {
+  title: string;
+  say?: string;
+}
+const { title, say } = Astro.props;
+---
+<header class="page-head wrap">
+  <h1 class="lettering">{title}</h1>
+  {say && <p class="balloon" data-tail="left">{say}</p>}
+</header>
+
+<style>
+  .page-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 18px 28px;
+    padding-block: 32px 40px;
+  }
+  h1 {
+    font-size: clamp(3rem, 9vw, 6.5rem);
+    animation: stamp 0.45s var(--pop) both;
+  }
+  .balloon {
+    margin: 0 0 18px;
+    max-width: 320px;
+    animation: pop-in 0.35s var(--pop) 0.3s both;
+    transform-origin: 20% 100%;
+  }
+  @keyframes stamp {
+    from {
+      transform: scale(1.3) rotate(-3deg);
+      opacity: 0;
+    }
+  }
+  @keyframes pop-in {
+    from {
+      transform: scale(0.4);
+      opacity: 0;
+    }
+  }
+</style>

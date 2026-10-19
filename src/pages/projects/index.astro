@@ -1,0 +1,71 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import PageHead from '../../components/PageHead.astro';
+
+const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
+---
+<Base title="Projects" description="TK Things Carlos has built.">
+  <PageHead title="Projects" say="TK Some of these even work." />
+  <div class="wrap page">
+    {projects.map((p) => (
+      <a class:list={['panel', 'project', p.data.size, { orange: p.data.size === 'wide' }]} href={`/projects/${p.id}`}>
+        <span class="caption">{p.data.year}</span>
+        <h2 transition:name={`project-${p.id}`}>{p.data.title}</h2>
+        <p>{p.data.blurb}</p>
+      </a>
+    ))}
+  </div>
+</Base>
+
+<style>
+  /* A comic page: panel sizes come from each project's frontmatter. */
+  .page {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: minmax(190px, auto);
+    grid-auto-flow: dense;
+    gap: var(--gutter);
+  }
+  .project {
+    text-decoration: none;
+    padding-top: 52px;
+    transition: transform 0.3s var(--pop);
+  }
+  .project:hover {
+    transform: translateY(-6px) rotate(-0.5deg);
+  }
+  .wide {
+    grid-column: span 2;
+  }
+  .tall {
+    grid-row: span 2;
+  }
+  .orange {
+    background: var(--orange);
+  }
+  h2 {
+    font-family: var(--f-letter);
+    font-size: clamp(1.6rem, 3vw, 2.6rem);
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+  .wide h2 {
+    font-size: clamp(2.2rem, 5vw, 4rem);
+  }
+  p {
+    max-width: 48ch;
+    margin: 0;
+  }
+  @media (max-width: 820px) {
+    .page {
+      grid-template-columns: 1fr;
+    }
+    .wide {
+      grid-column: auto;
+    }
+    .tall {
+      grid-row: auto;
+    }
+  }
+</style>

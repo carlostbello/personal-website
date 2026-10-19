@@ -1,0 +1,41 @@
+---
+import { site } from '../lib/site';
+---
+<footer class="foot">
+  <div class="wrap row">
+    <p class="balloon" data-tail="left">
+      Say hi: <a href={`mailto:${site.email}`}>{site.email}</a>
+    </p>
+    <ul>
+      <li><a href={site.social.github} rel="me">GitHub</a></li>
+      <li><a href={site.social.linkedin} rel="me">LinkedIn</a></li>
+      <li><a href="/rss.xml">RSS</a></li>
+    </ul>
+  </div>
+</footer>
+
+<style>
+  .foot {
+    background: var(--field-deep);
+    padding: 48px 0 40px;
+    margin-top: 80px;
+  }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+  }
+  .balloon {
+    margin: 0;
+  }
+  ul {
+    display: flex;
+    gap: 22px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-weight: 700;
+  }
+</style>

@@ -1,0 +1,71 @@
+---
+import { Image } from 'astro:assets';
+import avatar from '../assets/avatar.png';
+
+interface Props {
+  quips?: string[];
+}
+const { quips = [] } = Astro.props;
+---
+<aside class="narrator" data-narrator data-quips={JSON.stringify(quips)} aria-live="polite">
+  <p class="balloon" data-line></p>
+  <button type="button" aria-label="Poke Carlos">
+    <Image src={avatar} alt="" width={120} height={120} />
+  </button>
+</aside>
+
+<style>
+  .narrator {
+    position: fixed;
+    right: clamp(8px, 2vw, 24px);
+    bottom: 0;
+    z-index: 20;
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    pointer-events: none;
+    transform: translateY(110%);
+    transition: transform 0.45s var(--pop);
+  }
+  .narrator[data-on] {
+    transform: none;
+  }
+  .balloon {
+    max-width: 230px;
+    font-size: 1.1rem;
+    margin: 0 0 96px;
+    pointer-events: auto;
+  }
+  .balloon:empty {
+    visibility: hidden;
+  }
+  .balloon:global(.pop) {
+    animation: pop 0.35s var(--pop);
+    transform-origin: 80% 100%;
+  }
+  @keyframes pop {
+    from {
+      transform: scale(0.6);
+      opacity: 0;
+    }
+  }
+  button {
+    pointer-events: auto;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    transition: transform 0.2s var(--pop);
+  }
+  button:hover {
+    transform: translateY(-6px) rotate(-3deg);
+  }
+  button:active {
+    transform: translateY(2px) scale(0.96);
+  }
+  @media (max-width: 720px) {
+    .narrator {
+      display: none;
+    }
+  }
+</style>
