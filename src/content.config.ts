@@ -24,7 +24,7 @@ const projects = defineCollection({
     size: z.enum(['wide', 'tall', 'regular']).default('regular'),
     order: z.number().default(99),
     links: z
-      .array(z.object({ label: z.string(), href: z.string().url() }))
+      .array(z.object({ label: z.string(), href: z.url() }))
       .default([]),
   }),
 });
@@ -36,8 +36,8 @@ const talks = defineCollection({
     event: z.string(),
     date: z.coerce.date(),
     city: z.string().optional(),
-    slides: z.string().url().optional(),
-    video: z.string().url().optional(),
+    slides: z.url().optional(),
+    video: z.url().optional(),
   }),
 });
 
