@@ -10,7 +10,7 @@ against this file before it ships.
 | --- | --- | --- |
 | `--field` | `#3b5a8c` | The avatar's background blue. Page background. |
 | `--ink` | `#0b0b0c` | The avatar's line work. Borders, drawings, text on white. |
-| `--orange` | `#ff7a1a` | The single loud color. Lettering, caption boxes, one panel per row at most. |
+| `--accent` | `#ff7a1a` | The single loud color. Lettering, caption boxes, one panel per row at most. |
 | `--page` | `#ffffff` | Panels and balloons. Comic white, never cream. |
 
 - **Lettering** (`Bowlby One`, orange with an ink outline): page titles and section heads only.

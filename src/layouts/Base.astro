@@ -5,6 +5,7 @@ import InkDefs from '../components/InkDefs.astro';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
 import Seo from '../components/Seo.astro';
+import AccentPicker from '../components/AccentPicker.astro';
 
 type Props = import('astro/types').ComponentProps<typeof Seo>;
 const seo = Astro.props;
@@ -40,6 +41,7 @@ const wipe = {
       <slot />
     </main>
     <Footer transition:animate="none" />
+    {import.meta.env.DEV && <AccentPicker transition:persist />}
     <script>
       import '../scripts/motion';
     </script>
