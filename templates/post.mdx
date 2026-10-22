@@ -1,0 +1,23 @@
+---
+title: "Post title"
+description: "One or two sentences. Shows on the log, in search results and on link previews."
+date: 2026-01-01
+tags: [tag-one]
+draft: true
+# updated: 2026-02-01   # optional, shows "updated" in the byline
+---
+
+{/* Copy this to src/content/log/<slug>.mdx. Imports only needed for components you use. */}
+import Callout from '../../components/mdx/Callout.astro';
+import Figure from '../../components/mdx/Figure.astro';
+import Say from '../../components/mdx/Say.astro';
+{/* Images: put them next to the post, e.g. src/content/log/images/rig.jpg */}
+{/* import rig from './images/rig.jpg'; */}
+
+Opening paragraph.
+
+<Callout label="Heads up">A boxed aside.</Callout>
+
+{/* <Figure src={rig} alt="Describe the image" caption="Hand-lettered caption" /> */}
+
+<Say>The avatar says something.</Say>

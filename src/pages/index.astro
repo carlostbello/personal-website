@@ -10,14 +10,13 @@ import SignalPath from '../components/drawings/SignalPath.astro';
 import avatar from '../assets/avatar.png';
 import { home } from '../lib/copy';
 import { site } from '../lib/site';
+import { getPosts } from '../lib/posts';
+import PostList from '../components/PostList.astro';
 
 const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order).slice(0, 3);
-const posts = (await getCollection('log', ({ data }) => !data.draft))
-  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
-  .slice(0, 3);
+const posts = (await getPosts()).slice(0, 3);
 
 const drawings = [Rack, Espresso, SignalPath];
-const fmt = new Intl.DateTimeFormat('en', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
 
 const person = {
   '@context': 'https://schema.org',
@@ -87,15 +86,7 @@ const person = {
 
   <section class="log wrap" data-say={home.narrator.log}>
     <h2 class="lettering section-head">{home.log.heading}</h2>
-    <ol class="panel posts">
-      {posts.map((post) => (
-        <li>
-          <time datetime={post.data.date.toISOString()}>{fmt.format(post.data.date)}</time>
-          <a href={`/log/${post.id}`}>{post.data.title}</a>
-          <p>{post.data.description}</p>
-        </li>
-      ))}
-    </ol>
+    <div class="posts"><PostList posts={posts} showYear /></div>
     <a class="more on-field" href="/log">{home.log.all}</a>
   </section>
 
@@ -290,31 +281,7 @@ const person = {
 
   /* ---------- log ---------- */
   .posts {
-    list-style: none;
-    margin: 0;
     max-width: 820px;
-  }
-  .posts li {
-    display: grid;
-    grid-template-columns: 130px 1fr;
-    column-gap: 18px;
-    padding-block: 14px;
-  }
-  .posts li + li {
-    border-top: 2px dashed var(--ink);
-  }
-  .posts time {
-    font-family: var(--f-hand);
-    font-size: 1.15rem;
-  }
-  .posts a {
-    font-weight: 700;
-    font-size: 1.15rem;
-  }
-  .posts p {
-    grid-column: 2;
-    margin: 2px 0 0;
-    color: var(--ink-soft);
   }
 
   /* ---------- small screens ---------- */
@@ -353,12 +320,6 @@ const person = {
     .project,
     .project.wide {
       grid-column: span 6;
-    }
-    .posts li {
-      grid-template-columns: 1fr;
-    }
-    .posts p {
-      grid-column: 1;
     }
   }
 </style>

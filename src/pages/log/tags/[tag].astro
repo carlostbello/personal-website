@@ -1,0 +1,35 @@
+---
+import Base from '../../../layouts/Base.astro';
+import PageHead from '../../../components/PageHead.astro';
+import PostList from '../../../components/PostList.astro';
+import { getPosts, tagSlug } from '../../../lib/posts';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  const tags = [...new Set(posts.flatMap((p) => p.data.tags))];
+  return tags.map((tag) => ({
+    params: { tag: tagSlug(tag) },
+    props: { tag, posts: posts.filter((p) => p.data.tags.includes(tag)) },
+  }));
+}
+
+const { tag, posts } = Astro.props;
+---
+<Base title={`Posts about ${tag}`} description={`Everything in the log filed under ${tag}.`}>
+  <PageHead title={`#${tag}`} say={`${posts.length} ${posts.length === 1 ? 'post' : 'posts'} about this.`} />
+  <div class="wrap">
+    <div class="list"><PostList posts={posts} showYear /></div>
+    <a class="back" href="/log">← The whole log</a>
+  </div>
+</Base>
+
+<style>
+  .list {
+    max-width: 860px;
+  }
+  .back {
+    display: inline-block;
+    margin-top: 24px;
+    font-weight: 700;
+  }
+</style>

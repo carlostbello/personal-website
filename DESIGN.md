@@ -10,15 +10,15 @@ against this file before it ships.
 | --- | --- | --- |
 | `--field` | `#3b5a8c` | The avatar's background blue. Page background. |
 | `--ink` | `#0b0b0c` | The avatar's line work. Borders, drawings, text on white. |
-| `--accent` | `#ff7a1a` | The single loud color. Lettering, caption boxes, one panel per row at most. |
+| `--accent` | `#f3b53f` | Marigold, the classic comic yellow on blue. The single loud color: lettering, caption boxes, one panel per row at most. |
 | `--page` | `#ffffff` | Panels and balloons. Comic white, never cream. |
 
-- **Lettering** (`Bowlby One`, orange with an ink outline): page titles and section heads only.
+- **Lettering** (`Bowlby One`, marigold with an ink outline): page titles and section heads only.
 - **Hand** (`Patrick Hand`): speech balloons, caption boxes, dates. Never body text.
 - **Body** (`Atkinson Hyperlegible Next`): everything you read. Designed for low-vision legibility.
 - **Mono** (`Atkinson Hyperlegible Mono`): code only.
 
-Building blocks: `.panel` (white box with boiling ink border), `.caption` (orange
+Building blocks: `.panel` (white box with boiling ink border), `.caption` (marigold
 box in a panel's corner), `.balloon` (speech), `.lettering`, and ink drawings
 with `data-ink` that draw themselves on scroll.
 
@@ -33,7 +33,7 @@ Every animation must have a job. Current jobs:
 5. **Narrator**: the corner avatar comments on the section in view. Click to poke him.
 6. **Lean**: the hero avatar tilts toward the pointer (fine pointers only).
 7. **Panel wipe**: page navigation wipes like turning to the next panel.
-8. **Reading progress**: orange bar on posts, scroll-driven CSS.
+8. **Reading progress**: marigold bar on posts, scroll-driven CSS.
 
 All of it switches off under `prefers-reduced-motion`. The page must make
 complete sense with no JavaScript.

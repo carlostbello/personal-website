@@ -1,0 +1,124 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHead from '../components/PageHead.astro';
+---
+<Base title="Search" description="Search the log, projects and talks.">
+  <PageHead title="Search" say="It runs in your browser. No server involved." />
+  <div class="wrap" data-search>
+    <form class="box" role="search">
+      <label class="sr-only" for="q">Search</label>
+      <input id="q" name="q" type="search" placeholder="espresso, RAG, homelab…" autocomplete="off" autofocus />
+    </form>
+    <p class="status" aria-live="polite" data-status></p>
+    <ol class="results" data-results></ol>
+  </div>
+</Base>
+
+<script>
+  // Pagefind builds a static index after `astro build`; this page loads it
+  // on demand and searches entirely client-side.
+  type Hit = { url: string; excerpt: string; meta: { title?: string } };
+  type Pagefind = {
+    init: () => Promise<void>;
+    debouncedSearch: (q: string) => Promise<{ results: { data: () => Promise<Hit> }[] } | null>;
+  };
+
+  let pagefind: Pagefind | null = null;
+  const load = async () => {
+    if (pagefind) return pagefind;
+    const path = '/pagefind/pagefind.js';
+    pagefind = (await import(/* @vite-ignore */ path)) as Pagefind;
+    await pagefind.init();
+    return pagefind;
+  };
+
+  function setup() {
+    const root = document.querySelector<HTMLElement>('[data-search]');
+    if (!root) return;
+    const input = root.querySelector<HTMLInputElement>('input')!;
+    const status = root.querySelector<HTMLElement>('[data-status]')!;
+    const list = root.querySelector<HTMLOListElement>('[data-results]')!;
+    root.querySelector('form')!.addEventListener('submit', (e) => e.preventDefault());
+
+    const run = async () => {
+      const q = input.value.trim();
+      history.replaceState(history.state, '', q ? `?q=${encodeURIComponent(q)}` : location.pathname);
+      if (!q) {
+        list.replaceChildren();
+        status.textContent = '';
+        return;
+      }
+      let pf: Pagefind;
+      try {
+        pf = await load();
+      } catch {
+        status.textContent = 'The search index gets built with the site. Run npm run build to try it locally.';
+        return;
+      }
+      const res = await pf.debouncedSearch(q);
+      if (!res) return; // superseded by a newer keystroke
+      const hits = await Promise.all(res.results.slice(0, 12).map((r) => r.data()));
+      status.textContent = hits.length ? `${res.results.length} found` : 'Nothing found. Try fewer words.';
+      list.replaceChildren(
+        ...hits.map((hit) => {
+          const li = document.createElement('li');
+          li.className = 'panel';
+          const a = document.createElement('a');
+          a.href = hit.url.replace(/\.html$/, '');
+          a.textContent = hit.meta.title ?? hit.url;
+          const p = document.createElement('p');
+          p.innerHTML = hit.excerpt; // Pagefind escapes content and adds <mark>
+          li.append(a, p);
+          return li;
+        }),
+      );
+    };
+
+    input.addEventListener('input', run);
+    input.value = new URLSearchParams(location.search).get('q') ?? '';
+    if (input.value) run();
+  }
+
+  document.addEventListener('astro:page-load', setup);
+</script>
+
+<style>
+  .box input {
+    width: 100%;
+    max-width: 720px;
+    font: inherit;
+    font-size: 1.4rem;
+    padding: 14px 18px;
+    border: var(--line) solid var(--ink);
+    background: var(--page);
+  }
+  .status {
+    margin: 14px 0;
+    font-family: var(--f-hand);
+    font-size: 1.25rem;
+    min-height: 1.5em;
+  }
+  .results {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: var(--gutter);
+    max-width: 860px;
+  }
+  .results :global(li) {
+    padding-block: 18px;
+  }
+  .results :global(a) {
+    font-family: var(--f-letter);
+    font-size: 1.4rem;
+    line-height: 1.1;
+  }
+  .results :global(p) {
+    margin: 8px 0 0;
+  }
+  .results :global(mark) {
+    background: var(--accent);
+    padding: 0 2px;
+  }
+</style>

@@ -17,7 +17,7 @@ const ld = {
 ---
 <Base title="Talks" description="TK Conference talks by Carlos Bello on AI security and offline AI systems." jsonLd={ld}>
   <PageHead title="Talks" say="TK Where I've been on stage." />
-  <div class="wrap">
+  <div class="wrap" data-pagefind-body>
     <ul class="talks">
       {talks.map((t, i) => (
         <li class:list={['panel', { accent: i === 0 }]}>

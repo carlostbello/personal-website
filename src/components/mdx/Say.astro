@@ -1,0 +1,28 @@
+---
+// The avatar says something mid-post: <Say>Yes, really.</Say>
+import { Image } from 'astro:assets';
+import avatar from '../../assets/avatar.png';
+---
+<div class="say">
+  <Image src={avatar} alt="" width={110} height={110} class="bare" />
+  <p class="balloon" data-tail="left"><slot /></p>
+</div>
+
+<style>
+  .say {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin: 2em 0;
+  }
+  .say :global(img) {
+    flex: none;
+    margin-top: 30px;
+  }
+  .balloon {
+    margin: 0;
+  }
+  .balloon :global(p) {
+    margin: 0;
+  }
+</style>

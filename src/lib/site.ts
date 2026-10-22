@@ -7,6 +7,13 @@ export const site = {
     github: 'https://github.com/carlostbello',
     linkedin: 'https://www.linkedin.com/in/carlos-t-bello/',
   },
+  // Set to your Buttondown username to show the signup form on the log.
+  newsletter: { buttondown: '' },
+  // Cloudflare Web Analytics token (dashboard > Web Analytics). Empty = off.
+  analytics: { cloudflareToken: '' },
+  // Substack publication URL, linked from the log once set. Full posts
+  // stay here; Substack gets excerpts that link back.
+  substack: '',
   nav: [
     { label: 'Projects', href: '/projects' },
     { label: 'Log', href: '/log' },

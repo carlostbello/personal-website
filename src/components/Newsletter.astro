@@ -1,0 +1,55 @@
+---
+// Email signup. Hidden until site.newsletter.buttondown is set.
+import { site } from '../lib/site';
+const user = site.newsletter.buttondown;
+---
+{user && (
+  <form
+    class="panel news"
+    action={`https://buttondown.com/api/emails/embed-subscribe/${user}`}
+    method="post"
+    target="_blank"
+  >
+    <span class="caption">By email</span>
+    <label for="news-email">New posts in your inbox. Nothing else.</label>
+    <div class="row">
+      <input id="news-email" type="email" name="email" required placeholder="you@example.com" autocomplete="email" />
+      <button type="submit">Subscribe</button>
+    </div>
+  </form>
+)}
+
+<style>
+  .news {
+    padding-top: 50px;
+    max-width: 920px;
+    margin-top: 40px;
+  }
+  label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  input {
+    flex: 1 1 240px;
+    font: inherit;
+    padding: 10px 12px;
+    border: var(--line) solid var(--ink);
+  }
+  button {
+    font: 400 1.2rem var(--f-hand);
+    padding: 8px 20px;
+    background: var(--accent);
+    border: var(--line) solid var(--ink);
+    cursor: pointer;
+    transition: transform 0.2s var(--pop);
+  }
+  button:hover {
+    transform: rotate(-2deg) scale(1.04);
+  }
+</style>

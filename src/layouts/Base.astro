@@ -5,7 +5,7 @@ import InkDefs from '../components/InkDefs.astro';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
 import Seo from '../components/Seo.astro';
-import AccentPicker from '../components/AccentPicker.astro';
+import { site } from '../lib/site';
 
 type Props = import('astro/types').ComponentProps<typeof Seo>;
 const seo = Astro.props;
@@ -35,15 +35,23 @@ const wipe = {
     <ClientRouter />
   </head>
   <body>
+    <a class="skip" href="#main">Skip to content</a>
     <InkDefs />
     <Nav transition:animate="none" />
-    <main transition:animate={wipe}>
+    <main id="main" transition:animate={wipe}>
       <slot />
     </main>
     <Footer transition:animate="none" />
-    {import.meta.env.DEV && <AccentPicker transition:persist />}
     <script>
       import '../scripts/motion';
     </script>
+    {import.meta.env.PROD && site.analytics.cloudflareToken && (
+      <script
+        is:inline
+        defer
+        src="https://static.cloudflareinsights.com/beacon.min.js"
+        data-cf-beacon={JSON.stringify({ token: site.analytics.cloudflareToken, spa: true })}
+      />
+    )}
   </body>
 </html>

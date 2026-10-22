@@ -4,14 +4,15 @@
 @import '@fontsource-variable/atkinson-hyperlegible-mono/wght.css';
 
 /* ---------------------------------------------------------------
-   Tokens. Every color traces back to the avatar: its background
-   blue is the page field, its ink is the line work, and orange
-   replaces the skin tone as the one loud color.
+   Tokens. Every color traces back to the avatar or to printed
+   comics: the avatar's background blue is the page field, its ink is
+   the line work, and marigold (the classic comic yellow against blue)
+   is the one loud color.
    --------------------------------------------------------------- */
 :root {
   --field: #3b5a8c;
   --field-deep: #2b4470;
-  --accent: #ff7a1a;
+  --accent: #f3b53f;
   --accent-tint: color-mix(in srgb, var(--accent) 16%, white);
   --ink: #0b0b0c;
   --page: #ffffff;
@@ -94,6 +95,22 @@ p {
 .wrap {
   width: min(100% - 2 * var(--gutter), var(--max));
   margin-inline: auto;
+}
+
+.skip {
+  position: absolute;
+  left: 12px;
+  top: -60px;
+  z-index: 100;
+  background: var(--accent);
+  color: var(--ink);
+  border: var(--line) solid var(--ink);
+  padding: 6px 14px;
+  font-weight: 700;
+}
+
+.skip:focus {
+  top: 12px;
 }
 
 .sr-only {
@@ -299,7 +316,27 @@ p {
   margin: 0;
 }
 
-.prose img {
+.prose table {
+  border-collapse: collapse;
+  margin: 1.5em 0;
+  font-size: 0.95rem;
+}
+
+.prose th,
+.prose td {
+  border: 2px solid var(--ink);
+  padding: 6px 12px;
+  text-align: left;
+}
+
+.prose th {
+  background: var(--accent);
+  font-family: var(--f-hand);
+  font-weight: 400;
+  font-size: 1.1rem;
+}
+
+.prose img:not(.bare) {
   border: var(--line) solid var(--ink);
 }
 

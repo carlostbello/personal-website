@@ -1,18 +1,28 @@
 ---
-import { getCollection, render } from 'astro:content';
+import { render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
+import Newsletter from '../../components/Newsletter.astro';
 import { site } from '../../lib/site';
+import { dateFmt, getPosts, readingMinutes, tagSlug, type Post } from '../../lib/posts';
 
 export async function getStaticPaths() {
-  const posts = await getCollection('log', ({ data }) => !data.draft);
-  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+  const posts = await getPosts();
+  // posts are newest first, so "newer" is the previous index
+  return posts.map((post, i) => ({
+    params: { slug: post.id },
+    props: { post, newer: posts[i - 1], older: posts[i + 1] },
+  }));
 }
 
-const { post } = Astro.props;
+interface Props {
+  post: Post;
+  newer?: Post;
+  older?: Post;
+}
+const { post, newer, older } = Astro.props;
 const { Content } = await render(post);
-const { title, description, date, updated, tags } = post.data;
-const fmt = new Intl.DateTimeFormat('en', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
-const minutes = Math.max(1, Math.round((post.body ?? '').split(/\s+/).length / 230));
+const { title, description, date, updated, tags, draft } = post.data;
+const unpublished = draft || date.valueOf() > Date.now();
 
 const ld = {
   '@context': 'https://schema.org',
@@ -23,14 +33,17 @@ const ld = {
   dateModified: (updated ?? date).toISOString(),
   author: { '@type': 'Person', name: site.name, url: site.url },
   mainEntityOfPage: new URL(Astro.url.pathname, Astro.site).href,
+  keywords: tags.join(', '),
 };
 ---
 <Base title={title} description={description} type="article" published={date} jsonLd={ld}>
-  <article class="wrap">
+  <article class="wrap" data-pagefind-body>
     <header>
+      {unpublished && <p class="preview">Preview only: {draft ? 'draft' : 'scheduled'}</p>}
       <p class="meta">
-        <time datetime={date.toISOString()}>{fmt.format(date)}</time>
-        <span>{minutes} min read</span>
+        <time datetime={date.toISOString()}>{dateFmt.long.format(date)}</time>
+        <span>{readingMinutes(post)} min read</span>
+        {updated && <span>updated {dateFmt.short.format(updated)}</span>}
       </p>
       <h1 class="lettering">{title}</h1>
       <p class="dek">{description}</p>
@@ -38,11 +51,26 @@ const ld = {
     <div class="panel page">
       <div class="prose"><Content /></div>
     </div>
-    <footer class="after">
-      {tags.length > 0 && <p class="tags">Filed under {tags.join(', ')}</p>}
-      <a href="/log">← Back to the log</a>
-    </footer>
   </article>
+
+  <div class="wrap after">
+    {tags.length > 0 && (
+      <p class="tags">
+        Filed under{' '}
+        {tags.map((t, i) => (
+          <>
+            {i > 0 && ', '}
+            <a href={`/log/tags/${tagSlug(t)}`}>{t}</a>
+          </>
+        ))}
+      </p>
+    )}
+    <nav class="pager" aria-label="More posts">
+      {older ? <a class="older" href={`/log/${older.id}`}><span>Older</span>{older.data.title}</a> : <span />}
+      {newer && <a class="newer" href={`/log/${newer.id}`}><span>Newer</span>{newer.data.title}</a>}
+    </nav>
+    <Newsletter />
+  </div>
   <div class="progress" aria-hidden="true"></div>
 </Base>
 
@@ -51,9 +79,18 @@ const ld = {
     max-width: 920px;
     padding-block: 28px 36px;
   }
+  .preview {
+    display: inline-block;
+    background: var(--accent);
+    color: var(--ink);
+    border: var(--line) solid var(--ink);
+    font-family: var(--f-hand);
+    padding: 2px 10px;
+  }
   .meta {
     display: flex;
-    gap: 18px;
+    flex-wrap: wrap;
+    gap: 6px 18px;
     font-family: var(--f-hand);
     font-size: 1.25rem;
     margin-bottom: 10px;
@@ -72,15 +109,44 @@ const ld = {
     padding-block: clamp(24px, 4vw, 48px);
   }
   .after {
+    margin-top: 28px;
+  }
+  .after > * {
     max-width: 920px;
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-top: 24px;
+  }
+  .tags {
     font-weight: 700;
   }
-  /* Reading progress, driven by scroll where supported. */
+  .pager {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    margin-top: 20px;
+  }
+  .pager a {
+    max-width: 45%;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .pager span {
+    display: block;
+    font-family: var(--f-hand);
+    font-weight: 400;
+    font-size: 1.15rem;
+    color: var(--accent);
+  }
+  .older span::before {
+    content: '← ';
+  }
+  .newer {
+    text-align: right;
+  }
+  .newer span::after {
+    content: ' →';
+  }
+  .pager a:hover {
+    text-decoration: underline;
+  }
   .progress {
     position: fixed;
     inset: 0 0 auto 0;

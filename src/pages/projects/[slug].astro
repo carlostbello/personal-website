@@ -12,7 +12,7 @@ const { Content } = await render(project);
 const { title, blurb, year, links } = project.data;
 ---
 <Base title={title} description={blurb}>
-  <article class="wrap">
+  <article class="wrap" data-pagefind-body>
     <header>
       <h1 class="lettering" transition:name={`project-${project.id}`}>{title}</h1>
       <p class="blurb">{blurb}</p>
@@ -24,7 +24,7 @@ const { title, blurb, year, links } = project.data;
     <div class="panel prose-panel">
       <div class="prose"><Content /></div>
     </div>
-    <a class="back" href="/projects">← All projects</a>
+    <a class="back" href="/projects" data-pagefind-ignore>← All projects</a>
   </article>
 </Base>
 

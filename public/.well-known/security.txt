@@ -1,0 +1,5 @@
+# Found a security problem with this site? Thanks for looking.
+Contact: mailto:hi@carlostbello.com
+Expires: 2027-10-22T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://carlostbello.com/.well-known/security.txt

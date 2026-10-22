@@ -1,0 +1,21 @@
+---
+// A caption-box aside for posts: <Callout label="Heads up">…</Callout>
+interface Props {
+  label?: string;
+}
+const { label = 'Note' } = Astro.props;
+---
+<aside class="panel callout">
+  <span class="caption">{label}</span>
+  <slot />
+</aside>
+
+<style>
+  .callout {
+    margin: 2em 0;
+    padding-top: 46px;
+  }
+  .callout :global(p:last-child) {
+    margin-bottom: 0;
+  }
+</style>
