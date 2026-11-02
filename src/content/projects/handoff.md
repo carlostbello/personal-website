@@ -4,6 +4,7 @@ blurb: TK Hand an opencode session to a machine running T3 Code and get the resu
 year: 2026
 size: wide
 order: 1
+demo: handoff
 links:
   - label: Source
     href: https://github.com/carlostbello/handoff

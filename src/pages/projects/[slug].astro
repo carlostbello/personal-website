@@ -1,6 +1,7 @@
 ---
 import { getCollection, render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
+import HandoffDemo from '../../components/demos/HandoffDemo';
 
 export async function getStaticPaths() {
   const projects = await getCollection('projects');
@@ -9,7 +10,7 @@ export async function getStaticPaths() {
 
 const { project } = Astro.props;
 const { Content } = await render(project);
-const { title, blurb, year, links } = project.data;
+const { title, blurb, year, links, demo } = project.data;
 ---
 <Base title={title} description={blurb}>
   <article class="wrap" data-pagefind-body>
@@ -21,6 +22,12 @@ const { title, blurb, year, links } = project.data;
         {links.map((l) => <a href={l.href}>{l.label}</a>)}
       </p>
     </header>
+    {demo === 'handoff' && (
+      <div class="panel demo-panel" data-pagefind-ignore>
+        <span class="caption">How it works</span>
+        <HandoffDemo client:visible />
+      </div>
+    )}
     <div class="panel prose-panel">
       <div class="prose"><Content /></div>
     </div>
@@ -48,8 +55,13 @@ const { title, blurb, year, links } = project.data;
     font-family: var(--f-hand);
     font-size: 1.25rem;
   }
-  .prose-panel {
+  .prose-panel,
+  .demo-panel {
     max-width: 900px;
+  }
+  .demo-panel {
+    margin-bottom: var(--gutter);
+    padding-top: 52px;
   }
   .back {
     display: inline-block;

@@ -43,7 +43,7 @@ this site.
 
 ## Other content
 
-- **Projects**: `src/content/projects/<slug>.md`. `size: wide | tall | regular`, `order` for position.
+- **Projects**: `src/content/projects/<slug>.md`. `size: wide | tall | regular`, `order` for position, `demo` for an animated Stageshow demo (see `DESIGN.md`).
 - **Talks**: `src/content/talks.json`.
 - **Homepage copy**: `src/lib/copy.ts`.
 - **Site settings** (email, socials, analytics, newsletter, Substack): `src/lib/site.ts`.

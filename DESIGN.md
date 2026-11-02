@@ -22,6 +22,21 @@ Building blocks: `.panel` (white box with boiling ink border), `.caption` (marig
 box in a panel's corner), `.balloon` (speech), `.lettering`, and ink drawings
 with `data-ink` that draw themselves on scroll.
 
+## Product demos (Stageshow)
+
+Projects can carry a short animated demo of the real thing working, built with
+the vendored [Stageshow](src/stageshow/README.md) kit and its rules (story in
+three to five beats, a poster frame, a compact design for phones, crop only
+filler). On this site they are drawn in the comic language: ink outlines
+instead of soft shadows, marigold for whatever travels, caption boxes for
+annotations. They load as React islands on their own page only, so the rest of
+the site ships no React.
+
+To add one: build it in `src/components/demos/`, add its name to the `demo`
+enum in `src/content.config.ts`, render it in `src/pages/projects/[slug].astro`,
+and set `demo:` in the project's frontmatter. Read the skill's `SKILL.md`
+first; the gold examples are the bar.
+
 ## Motion rules
 
 Every animation must have a job. Current jobs:

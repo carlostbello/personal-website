@@ -23,6 +23,8 @@ const projects = defineCollection({
     // Panel size on the projects page: the one you care about most gets "wide".
     size: z.enum(['wide', 'tall', 'regular']).default('regular'),
     order: z.number().default(99),
+    // Animated demo shown above the write-up (see src/components/demos).
+    demo: z.enum(['handoff']).optional(),
     links: z
       .array(z.object({ label: z.string(), href: z.url() }))
       .default([]),
