@@ -1,0 +1,247 @@
+---
+// The homepage's own table of contents: five small comic panels, each a
+// tiny inked vignette. Same-page jumps turn the page with a View
+// Transition; Talks peels the corner before leaving; Search opens the
+// balloon palette. Without JS every panel is a plain link.
+const panels = [
+  { key: 'home', label: 'Home', href: '#top' },
+  { key: 'projects', label: 'Projects', href: '#projects' },
+  { key: 'log', label: 'Log', href: '#log' },
+  { key: 'talks', label: 'Talks', href: '/talks' },
+  { key: 'search', label: 'Search', href: '/search' },
+];
+---
+<nav class="pn-index wrap" aria-label="On this page" data-pn-index>
+  <p class="caption pn-page" aria-hidden="true">Page <b data-pn-num>1</b> of 5</p>
+  <ol class="pn-strip">
+    {panels.map((p, i) => (
+      <li style={`--n:${i}`}>
+        <a
+          class:list={['pn-thumb', `pn-${p.key}`]}
+          href={p.href}
+          data-pn-go={p.key}
+          data-pn-n={i + 1}
+          aria-current={i === 0 ? 'page' : undefined}
+        >
+          <span class="pn-no" aria-hidden="true">{i + 1}</span>
+          {p.key === 'home' && (
+            <svg viewBox="0 0 120 80" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" data-ink aria-hidden="true">
+              <path d="M6 74H114" />
+              <path d="M12 44H108" />
+              <path d="M18 44V74M102 44V74" />
+              <rect x="28" y="12" width="42" height="27" rx="2" fill="var(--page)" />
+              <rect x="33" y="17" width="32" height="17" fill="var(--accent)" stroke="none" />
+              <path d="M49 39V44" />
+              <rect x="74" y="50" width="24" height="24" fill="var(--page)" />
+              <path d="M78 57H94M78 64H94" />
+              <circle cx="92" cy="70" r="1.8" fill="var(--accent)" stroke="none" />
+              <rect x="80" y="30" width="10" height="14" fill="var(--page)" />
+              <path d="M90 33C96 33 96 41 90 41" />
+              <path d="M83 26C83 22 86 22 86 18" stroke-width="2" />
+            </svg>
+          )}
+          {p.key === 'projects' && (
+            <svg viewBox="0 0 120 80" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" data-ink aria-hidden="true">
+              <path d="M6 74H114" />
+              <path d="M52 34C58 18 62 18 68 34" stroke-width="2" />
+              <g transform="rotate(-9 32 50)">
+                <rect x="10" y="32" width="46" height="36" rx="4" fill="var(--page)" />
+                <path d="M10 44H56M10 56H56M21 32V68M33 32V68M45 32V68" stroke-width="2" />
+                <rect x="45" y="56" width="11" height="12" fill="var(--accent)" stroke-width="2" />
+              </g>
+              <g transform="rotate(9 88 50)">
+                <rect x="64" y="32" width="46" height="36" rx="4" fill="var(--page)" />
+                <path d="M64 44H110M64 56H110M75 32V68M87 32V68M99 32V68" stroke-width="2" />
+              </g>
+            </svg>
+          )}
+          {p.key === 'log' && (
+            <svg viewBox="0 0 120 80" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" data-ink aria-hidden="true">
+              <path d="M60 20C46 12 26 12 12 18V68C26 62 46 62 60 70C74 62 94 62 108 68V18C94 12 74 12 60 20Z" fill="var(--page)" />
+              <path d="M60 20V70" />
+              <path d="M20 29H50M20 37H48M20 45H42M20 53H46" stroke-width="2" />
+              <path d="M70 29H98M70 37H88" stroke-width="2" />
+              <path d="M76 60L100 34L107 41L83 67Z" fill="var(--accent)" />
+              <path d="M76 60L72 71L83 67" fill="var(--page)" />
+            </svg>
+          )}
+          {p.key === 'talks' && (
+            <svg viewBox="0 0 120 80" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" data-ink aria-hidden="true">
+              <defs>
+                <pattern id="pn-dots" width="6" height="6" patternUnits="userSpaceOnUse">
+                  <circle cx="3" cy="3" r="1.7" fill="var(--ink)" stroke="none" />
+                </pattern>
+              </defs>
+              <path d="M50 2L24 74H96L70 2Z" fill="var(--accent)" stroke="none" />
+              <path d="M50 2L24 74H96L70 2Z" fill="url(#pn-dots)" stroke="none" opacity="0.35" />
+              <path d="M6 74H114" />
+              <path d="M60 74V42M46 74H74" />
+              <path d="M50 30C50 40 70 40 70 30" stroke-width="2.5" />
+              <rect x="53" y="10" width="14" height="24" rx="7" fill="var(--page)" />
+              <path d="M53 20H67M53 26H67" stroke-width="2" />
+              <path d="M78 16C83 21 83 29 78 34M85 11C93 19 93 31 85 39" stroke-width="2.5" />
+            </svg>
+          )}
+          {p.key === 'search' && (
+            <svg viewBox="0 0 120 80" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" data-ink aria-hidden="true">
+              <path d="M14 36C14 16 82 10 90 30C96 48 66 54 44 52L28 66L32 51C20 49 14 44 14 36Z" fill="var(--page)" />
+              <circle cx="36" cy="34" r="3" fill="var(--ink)" stroke="none" />
+              <circle cx="50" cy="34" r="3" fill="var(--ink)" stroke="none" />
+              <circle cx="64" cy="34" r="3" fill="var(--ink)" stroke="none" />
+              <circle cx="88" cy="46" r="13" fill="var(--accent)" />
+              <path d="M82 41C84 38 87 37 90 38" stroke-width="2" />
+              <path d="M98 56L110 70" stroke-width="6" />
+            </svg>
+          )}
+          <span class="pn-label">
+            {p.label}
+            {p.key === 'search' && <kbd class="pn-kbd" data-pn-kbd hidden>Ctrl K</kbd>}
+          </span>
+        </a>
+      </li>
+    ))}
+  </ol>
+</nav>
+
+<style>
+  .pn-index {
+    position: relative;
+    margin-top: clamp(28px, 4vw, 44px);
+    margin-bottom: clamp(56px, 8vw, 96px);
+    padding-top: 18px;
+  }
+  .pn-page {
+    top: -6px;
+    left: 0;
+    font-size: 1.1rem;
+    transform: rotate(-1.5deg);
+  }
+  .pn-page b {
+    font-weight: 400;
+    display: inline-block;
+    min-width: 0.6em;
+    text-align: center;
+  }
+  .pn-page b:global(.flip) {
+    animation: pn-flip 0.32s var(--pop);
+  }
+  @keyframes pn-flip {
+    from {
+      transform: rotateX(90deg);
+    }
+  }
+  .pn-strip {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    /* Uneven widths, like a real comic tier. */
+    grid-template-columns: 1fr 1.25fr 1fr 1.1fr 1.2fr;
+    gap: var(--gutter);
+  }
+  .pn-thumb {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--page);
+    color: var(--ink);
+    text-decoration: none;
+    padding: 12px 12px 10px;
+    isolation: isolate;
+    transform: rotate(var(--tilt, 0deg));
+    transition:
+      transform 0.28s var(--pop),
+      background-color 0.2s;
+  }
+  .pn-thumb::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: var(--line) solid var(--ink);
+    pointer-events: none;
+    animation: boil 0.375s steps(1) infinite;
+  }
+  li:nth-child(2) .pn-thumb {
+    --tilt: 0.8deg;
+  }
+  li:nth-child(4) .pn-thumb {
+    --tilt: -0.9deg;
+  }
+  .pn-thumb[aria-current='page'] {
+    background: var(--accent);
+  }
+  .pn-thumb:hover,
+  .pn-thumb:focus-visible {
+    transform: rotate(0deg) translateY(-6px);
+  }
+  .pn-thumb:active {
+    transform: translateY(1px) scale(0.97);
+    transition-duration: 0.08s;
+  }
+  .pn-thumb svg {
+    width: 100%;
+    height: clamp(44px, 7.4vw, 104px);
+    flex: none;
+  }
+  .pn-thumb:hover svg,
+  .pn-thumb:focus-visible svg {
+    animation: pn-wiggle 0.4s var(--pop);
+  }
+  @keyframes pn-wiggle {
+    40% {
+      transform: rotate(-3deg) translateY(-2px);
+    }
+  }
+  .pn-no {
+    position: absolute;
+    top: 4px;
+    right: 8px;
+    font-family: var(--f-hand);
+    font-size: 1rem;
+    line-height: 1;
+  }
+  .pn-label {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 6px;
+    margin-top: auto;
+    padding-top: 6px;
+    font-weight: 700;
+    font-size: 1rem;
+    line-height: 1.1;
+  }
+  .pn-kbd {
+    font-family: var(--f-hand);
+    font-weight: 400;
+    font-size: 0.95rem;
+    border: 2px solid var(--ink);
+    border-radius: 4px 6px 5px 4px;
+    padding: 0 5px;
+    white-space: nowrap;
+  }
+  .pn-kbd[hidden] {
+    display: none;
+  }
+
+  @media (max-width: 720px) {
+    .pn-strip {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 7px;
+    }
+    .pn-thumb {
+      padding: 7px 5px 6px;
+    }
+    .pn-no {
+      display: none;
+    }
+    .pn-label {
+      justify-content: center;
+      font-size: 0.78rem;
+    }
+    .pn-kbd {
+      display: none;
+    }
+  }
+</style>

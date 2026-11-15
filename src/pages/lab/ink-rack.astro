@@ -1,0 +1,520 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Narrator from '../../components/Narrator.astro';
+import AirGap from '../../components/drawings/AirGap.astro';
+import Rack from '../../components/drawings/Rack.astro';
+import Espresso from '../../components/drawings/Espresso.astro';
+import SignalPath from '../../components/drawings/SignalPath.astro';
+import avatar from '../../assets/avatar.png';
+import { home } from '../../lib/copy';
+import { getPosts } from '../../lib/posts';
+import PostList from '../../components/PostList.astro';
+
+const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order).slice(0, 3);
+const posts = (await getPosts()).slice(0, 3);
+
+const drawings = [Rack, Espresso, SignalPath];
+const rackPanel = home.lab.panels[0];
+---
+<Base title="Lab: The halftone rack" noindex>
+  <section class="hero wrap" data-hero>
+    <h1 class="lettering name">
+      <span>Carlos</span>
+      <span>Bello</span>
+    </h1>
+    <p class="role">{home.role}</p>
+
+    <figure class="panel rack-panel" data-rack>
+      <span class="caption">{rackPanel.caption}</span>
+      <div class="stage" data-stage>
+        <div class="fallback"><Rack /></div>
+        <div class="hits" data-hits></div>
+        <p class="callout" data-callout hidden aria-live="polite"></p>
+        <span class="sfx" aria-hidden="true">Hmmm</span>
+      </div>
+      <figcaption>
+        <span class="hint">Drag the rack. Poke a box.</span>
+        <a href={rackPanel.href}>{rackPanel.line}</a>
+      </figcaption>
+    </figure>
+
+    <div class="who" data-lean>
+      <p class="balloon hello">{home.hello}</p>
+      <Image src={avatar} alt="Cartoon of Carlos grinning with his arms crossed" width={420} height={420} loading="eager" class="me" />
+    </div>
+  </section>
+
+  <section class="work wrap" data-say={home.narrator.work}>
+    <div class="panel work-panel">
+      <span class="caption">{home.work.caption}</span>
+      <div class="work-text">
+        <h2 class="lettering">{home.work.heading}</h2>
+        {home.work.body.map((p) => <p>{p}</p>)}
+        <a class="more" href="/talks">{home.work.talksLink}</a>
+      </div>
+      <AirGap />
+    </div>
+  </section>
+
+  <section class="lab wrap" data-say={home.narrator.lab}>
+    <h2 class="lettering section-head">{home.lab.heading}</h2>
+    <div class="strip">
+      {home.lab.panels.map((p, i) => {
+        const Drawing = drawings[i];
+        return (
+          <a class="panel strip-panel" href={p.href}>
+            <span class="caption">{p.caption}</span>
+            <Drawing />
+            <p>{p.line}</p>
+          </a>
+        );
+      })}
+    </div>
+  </section>
+
+  <section class="projects wrap" data-say={home.narrator.projects}>
+    <h2 class="lettering section-head">{home.projects.heading}</h2>
+    <div class="project-grid">
+      {projects.map((p) => (
+        <a class:list={['panel', 'project', p.data.size]} href={`/projects/${p.id}`}>
+          <h3 transition:name={`project-${p.id}`}>{p.data.title}</h3>
+          <p>{p.data.blurb}</p>
+          <span class="year">{p.data.year}</span>
+        </a>
+      ))}
+    </div>
+    <a class="more on-field" href="/projects">{home.projects.all}</a>
+  </section>
+
+  <section class="log wrap" data-say={home.narrator.log}>
+    <h2 class="lettering section-head">{home.log.heading}</h2>
+    <div class="posts"><PostList posts={posts} showYear /></div>
+    <a class="more on-field" href="/log">{home.log.all}</a>
+  </section>
+
+  <Narrator quips={home.quips} />
+</Base>
+
+<script>
+  // The rack (and three.js with it) only loads once its panel is on screen.
+  let cleanup: (() => void) | null = null;
+  let io: IntersectionObserver | null = null;
+  let alive = 0;
+
+  document.addEventListener('astro:page-load', () => {
+    const el = document.querySelector<HTMLElement>('[data-rack]');
+    if (!el) return;
+    const ticket = ++alive;
+    io = new IntersectionObserver(async ([e]) => {
+      if (!e.isIntersecting) return;
+      io?.disconnect();
+      const { mountRack } = await import('../../lab/ink-rack/rack');
+      if (ticket === alive) cleanup = mountRack(el);
+    }, { rootMargin: '200px' });
+    io.observe(el);
+  });
+
+  document.addEventListener('astro:before-swap', () => {
+    alive++;
+    io?.disconnect();
+    cleanup?.();
+    cleanup = null;
+  });
+</script>
+
+<style>
+  /* ---------- hero ---------- */
+  .hero {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(340px, 540px);
+    grid-template-rows: auto auto 1fr;
+    column-gap: var(--gutter);
+    align-items: end;
+    padding-top: 24px;
+    border-bottom: var(--line) solid var(--ink);
+  }
+  .name {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: start;
+    margin-top: 12px;
+    font-size: clamp(3.4rem, 8.6vw, 7.4rem);
+    position: relative;
+    z-index: 3;
+  }
+  .name span {
+    display: block;
+    animation: stamp 0.5s var(--pop) both;
+  }
+  .name span:nth-child(2) {
+    animation-delay: 0.12s;
+    padding-left: 0.4em;
+  }
+  @keyframes stamp {
+    from {
+      transform: scale(1.35) rotate(-4deg);
+      opacity: 0;
+    }
+  }
+  .role {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: start;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 18px 0 0;
+    animation: rise 0.5s var(--snap) 0.35s both;
+  }
+  .who {
+    grid-column: 1;
+    grid-row: 3;
+    justify-self: end;
+    width: min(330px, 92%);
+    margin-right: -90px; /* step in front of the rack panel */
+    margin-top: 60px;
+    position: relative;
+    z-index: 4;
+    transform: rotate(var(--lean, 0deg)) translateY(var(--shift, 0));
+    transform-origin: 50% 100%;
+    transition: transform 0.4s var(--snap);
+  }
+  .me {
+    width: 100%;
+    height: auto;
+    margin-bottom: -2px; /* sit on the hero's ink floor */
+    animation: rise 0.7s var(--pop) 0.2s both;
+  }
+  @keyframes rise {
+    from {
+      transform: translateY(40%);
+      opacity: 0;
+    }
+  }
+  .hello {
+    position: absolute;
+    left: -58%;
+    top: 4%;
+    max-width: 250px;
+    z-index: 2;
+    animation: pop-in 0.4s var(--pop) 0.75s both;
+    transform-origin: 80% 100%;
+  }
+  @keyframes pop-in {
+    from {
+      transform: scale(0.4);
+      opacity: 0;
+    }
+  }
+
+  /* ---------- the rack panel ---------- */
+  .rack-panel {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    align-self: stretch;
+    margin: 0 0 28px;
+    padding: 0;
+    transform: rotate(0.6deg);
+    animation: rise 0.6s var(--pop) 0.1s both;
+  }
+  .stage {
+    position: relative;
+    height: clamp(520px, 74vh, 680px);
+    overflow: hidden;
+    touch-action: pan-y;
+  }
+  .stage :global(canvas) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .fallback {
+    position: absolute;
+    inset: 10% 6% 6%;
+    display: grid;
+    place-items: center;
+  }
+  .fallback :global(svg) {
+    width: 100%;
+    height: 100%;
+  }
+  .rack-panel:global(.live) .fallback {
+    display: none;
+  }
+  .hits {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .hits :global(.hit) {
+    position: absolute;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    background: none;
+    color: transparent;
+    font-size: 1px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .hits :global(.hit:focus-visible) {
+    outline: 4px solid var(--accent);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 9px var(--ink);
+  }
+  .callout {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 3;
+    margin: 0;
+    max-width: 220px;
+    background: var(--accent);
+    color: var(--ink);
+    border: var(--line) solid var(--ink);
+    font-family: var(--f-hand);
+    font-size: 1.3rem;
+    line-height: 1.1;
+    padding: 6px 12px 5px;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  /* Tail: an ink wedge with a marigold wedge inside it. */
+  .callout::before,
+  .callout::after {
+    content: '';
+    position: absolute;
+    left: 26%;
+    width: 22px;
+    height: 16px;
+    clip-path: polygon(0 0, 100% 0, 15% 100%);
+  }
+  .callout::before {
+    bottom: -17px;
+    background: var(--ink);
+  }
+  .callout::after {
+    bottom: -11px;
+    left: calc(26% + 4px);
+    width: 14px;
+    height: 10px;
+    background: var(--accent);
+  }
+  .callout[data-below='yes']::before,
+  .callout[data-below='yes']::after {
+    clip-path: polygon(15% 0, 100% 100%, 0 100%);
+  }
+  .callout[data-below='yes']::before {
+    bottom: auto;
+    top: -17px;
+  }
+  .callout[data-below='yes']::after {
+    bottom: auto;
+    top: -11px;
+  }
+  .callout:global(.pop) {
+    animation: pop-in 0.3s var(--pop);
+    transform-origin: 30% 100%;
+  }
+  .callout[hidden] {
+    display: none;
+  }
+  .sfx {
+    position: absolute;
+    right: 14px;
+    top: 12px;
+    font-family: var(--f-letter);
+    font-size: clamp(1.6rem, 3vw, 2.3rem);
+    line-height: 1;
+    color: var(--accent);
+    -webkit-text-stroke: 0.08em var(--ink);
+    paint-order: stroke fill;
+    transform: rotate(8deg);
+    pointer-events: none;
+  }
+  .rack-panel figcaption {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    padding: 12px 18px 14px 18px;
+    border-top: var(--line) solid var(--ink);
+  }
+  .hint {
+    display: none;
+    font-family: var(--f-hand);
+    font-size: 1.2rem;
+  }
+  .rack-panel:global(.live) .hint {
+    display: inline;
+  }
+  .rack-panel figcaption a {
+    font-weight: 700;
+  }
+
+  /* ---------- shared ---------- */
+  section + section {
+    margin-top: clamp(64px, 10vw, 120px);
+  }
+  .section-head {
+    font-size: clamp(2.2rem, 5vw, 3.6rem);
+    margin-bottom: 26px;
+  }
+  .more {
+    display: inline-block;
+    margin-top: 18px;
+    font-weight: 700;
+  }
+  .more::after {
+    content: ' →';
+  }
+
+  /* ---------- work ---------- */
+  .work-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+    gap: clamp(20px, 4vw, 48px);
+    align-items: center;
+    padding-top: 56px;
+  }
+  .work-panel h2 {
+    font-size: clamp(2rem, 4vw, 3rem);
+    margin-bottom: 18px;
+  }
+
+  /* ---------- lab strip: uneven panels, like a comic row ---------- */
+  .strip {
+    display: grid;
+    grid-template-columns: 1.15fr 1.4fr 1fr;
+    gap: var(--gutter);
+  }
+  .strip-panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding-top: 52px;
+    text-decoration: none;
+    transition: transform 0.3s var(--pop);
+  }
+  .strip-panel:nth-child(1) {
+    transform: rotate(-0.8deg);
+  }
+  .strip-panel:nth-child(3) {
+    transform: rotate(0.7deg);
+    background: var(--accent);
+  }
+  .strip-panel:hover {
+    transform: rotate(0deg) translateY(-6px);
+  }
+  .strip-panel :global(svg) {
+    width: 100%;
+    max-height: 190px;
+    margin-block: 8px 14px;
+  }
+  .strip-panel p {
+    margin: 0;
+  }
+
+  /* ---------- projects ---------- */
+  .project-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: var(--gutter);
+  }
+  .project {
+    grid-column: span 3;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    min-height: 200px;
+  }
+  .project.wide {
+    grid-column: span 6;
+    background: var(--accent);
+    min-height: 240px;
+  }
+  .project h3 {
+    font-family: var(--f-letter);
+    font-size: clamp(1.6rem, 3vw, 2.4rem);
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+  .project.wide h3 {
+    font-size: clamp(2.4rem, 6vw, 4.5rem);
+  }
+  .project p {
+    max-width: 52ch;
+  }
+  .year {
+    margin-top: auto;
+    font-family: var(--f-hand);
+    font-size: 1.2rem;
+  }
+  .project:hover h3 {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 5px;
+  }
+  .project.wide:hover h3 {
+    text-decoration-color: var(--ink);
+  }
+  .on-field {
+    color: var(--page);
+  }
+
+  /* ---------- log ---------- */
+  .posts {
+    max-width: 820px;
+  }
+
+  /* ---------- small screens ---------- */
+  @media (max-width: 820px) {
+    .hero {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto auto auto;
+    }
+    .name,
+    .role,
+    .who,
+    .rack-panel {
+      grid-column: 1;
+      grid-row: auto;
+    }
+    .role {
+      font-size: 1.1rem;
+      margin-bottom: 22px;
+    }
+    .rack-panel {
+      margin: 0;
+      transform: rotate(0.4deg);
+    }
+    .stage {
+      height: min(124vw, 560px);
+    }
+    .who {
+      width: min(250px, 58%);
+      justify-self: end;
+      margin: -36px 0 0;
+    }
+    .hello {
+      left: -78%;
+      top: 34%;
+      max-width: 180px;
+      font-size: 1.05rem;
+      padding: 14px 20px;
+    }
+    .work-panel,
+    .strip {
+      grid-template-columns: 1fr;
+    }
+    .project,
+    .project.wide {
+      grid-column: span 6;
+    }
+  }
+</style>

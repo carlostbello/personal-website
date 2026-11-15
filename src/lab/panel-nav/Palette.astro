@@ -1,0 +1,477 @@
+---
+import { Image } from 'astro:assets';
+import avatar from '../../assets/avatar.png';
+import type { Entry } from './search';
+
+interface Props {
+  index: Entry[];
+}
+const { index } = Astro.props;
+// JSON inside a <script> tag: escape "<" so no string can close the tag.
+const json = JSON.stringify(index).replace(/</g, '\\u003c');
+---
+<dialog class="pn-dialog" data-pn-dialog data-state="idle" aria-labelledby="pn-say">
+  <script type="application/json" data-pn-data set:html={json} />
+  <div class="pn-stage">
+    <div class="pn-balloon" data-pn-balloon>
+      <p class="pn-say" id="pn-say" data-pn-say aria-live="polite">Where to?</p>
+      <div class="pn-field">
+        <input
+          type="text"
+          data-pn-input
+          role="combobox"
+          aria-expanded="true"
+          aria-controls="pn-results"
+          aria-autocomplete="list"
+          aria-labelledby="pn-say"
+          placeholder="A project, a post, a page"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <kbd>Esc</kbd>
+      </div>
+      <ol class="pn-results" id="pn-results" role="listbox" aria-label="Results" data-pn-results></ol>
+      <p class="pn-keys" aria-hidden="true"><kbd>↑</kbd><kbd>↓</kbd> pick <kbd>Enter</kbd> go</p>
+    </div>
+    <div class="pn-guy" aria-hidden="true">
+      <div class="pn-guy-body" data-pn-guy>
+        <Image src={avatar} alt="" width={300} height={300} loading="lazy" />
+      </div>
+      <span class="pn-puff pn-puff-1"></span>
+      <span class="pn-puff pn-puff-2"></span>
+      <span class="pn-cloud"><i></i><i></i><i></i></span>
+    </div>
+  </div>
+</dialog>
+
+<style>
+  .pn-dialog {
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    overflow: hidden;
+  }
+  .pn-dialog::backdrop {
+    /* Halftone dots over the deep field: the page goes dim like a
+       background panel. */
+    background:
+      radial-gradient(circle at 50% 50%, var(--field) 1.4px, transparent 1.9px) 0 0 / 9px 9px,
+      color-mix(in srgb, var(--field-deep) 88%, transparent);
+    animation: pn-dim 0.25s ease-out both;
+  }
+  .pn-dialog[data-closing]::backdrop {
+    animation: pn-dim 0.18s ease-in reverse both;
+  }
+  @keyframes pn-dim {
+    from {
+      opacity: 0;
+    }
+  }
+
+  .pn-stage {
+    position: relative;
+    height: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 640px) 230px;
+    grid-template-rows: 1fr auto;
+    justify-content: center;
+    column-gap: 10px;
+    padding: clamp(24px, 8vh, 90px) var(--gutter) 0;
+  }
+
+  /* ---------- the balloon ---------- */
+  .pn-balloon {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: start;
+    position: relative;
+    background: var(--page);
+    border-radius: 34px 40px 30px 44px / 40px 32px 44px 36px;
+    padding: 26px clamp(18px, 3vw, 34px) 18px;
+    transform-origin: 92% 100%;
+    animation: pn-pop 0.42s var(--pop) 0.08s both;
+  }
+  .pn-balloon::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: var(--line) solid var(--ink);
+    border-radius: inherit;
+    pointer-events: none;
+    animation: boil 0.375s steps(1) infinite;
+  }
+  /* Speech tail toward Carlos, bottom right. */
+  .pn-balloon::after {
+    content: '';
+    position: absolute;
+    right: 46px;
+    bottom: -36px;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 40px 0 0 46px;
+    border-color: var(--page) transparent transparent transparent;
+    filter: drop-shadow(2.5px 0 0 var(--ink)) drop-shadow(-2.5px 0 0 var(--ink)) drop-shadow(0 2px 0 var(--ink));
+    transform-origin: 0 0;
+    transition: transform 0.2s var(--pop);
+  }
+  /* While he thinks, the speech tail tucks away and thought puffs take over. */
+  [data-state='thinking'] .pn-balloon::after {
+    transform: scale(0);
+  }
+  .pn-dialog[data-closing] .pn-balloon {
+    animation: pn-pop 0.18s ease-in reverse both;
+  }
+  @keyframes pn-pop {
+    from {
+      transform: scale(0.3) rotate(4deg);
+      opacity: 0;
+    }
+  }
+
+  .pn-say {
+    font-family: var(--f-hand);
+    font-size: clamp(1.5rem, 3vw, 1.9rem);
+    line-height: 1.1;
+    margin: 0 0 12px;
+  }
+  .pn-say:global(.pop) {
+    animation: pn-say 0.3s var(--pop);
+  }
+  @keyframes pn-say {
+    from {
+      transform: scale(0.85) rotate(-2deg);
+    }
+  }
+
+  .pn-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+    border: var(--line) solid var(--ink);
+    border-radius: 6px 10px 8px 7px;
+    background: var(--page);
+  }
+  .pn-field:focus-within {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+  }
+  .pn-field input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    font-size: 1.2rem;
+    padding: 12px 14px;
+    color: var(--ink);
+    outline: none;
+  }
+  .pn-field input::placeholder {
+    color: var(--ink-soft);
+  }
+  kbd,
+  .pn-results :global(kbd) {
+    font-family: var(--f-hand);
+    font-size: 1rem;
+    line-height: 1.2;
+    border: 2px solid var(--ink);
+    border-radius: 4px 6px 5px 4px;
+    padding: 0 6px;
+    background: var(--page);
+    color: var(--ink);
+  }
+  .pn-field kbd {
+    margin-right: 10px;
+  }
+
+  .pn-results {
+    list-style: none;
+    margin: 18px 0 0;
+    padding: 0;
+    display: grid;
+    gap: 6px;
+    max-height: min(46vh, 420px);
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+  .pn-results:empty {
+    display: none;
+  }
+  .pn-results :global(li) {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 8px 6px 4px;
+    border: 2px solid transparent;
+    border-radius: 6px 9px 7px 8px;
+    cursor: pointer;
+    animation: pn-deal 0.3s var(--pop) both;
+    animation-delay: calc(var(--i, 0) * 35ms);
+  }
+  @keyframes pn-deal {
+    from {
+      transform: translateX(-14px) rotate(-1deg);
+      opacity: 0;
+    }
+  }
+  .pn-results :global(li[aria-selected='true']) {
+    border-color: var(--ink);
+    background: color-mix(in srgb, var(--accent) 22%, var(--page));
+  }
+  .pn-results :global(.pn-n) {
+    font-family: var(--f-hand);
+    font-size: 1.15rem;
+    line-height: 1;
+    min-width: 1.9em;
+    text-align: center;
+    padding: 5px 6px 3px;
+    background: var(--accent);
+    border: var(--line) solid var(--ink);
+    transform: rotate(-3deg);
+    transition: transform 0.2s var(--pop);
+  }
+  .pn-results :global(li[aria-selected='true'] .pn-n) {
+    transform: rotate(3deg) scale(1.1);
+  }
+  .pn-results :global(.pn-t) {
+    display: block;
+    font-weight: 700;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .pn-results :global(.pn-t mark) {
+    background: none;
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 5px;
+    text-underline-offset: 2px;
+    text-decoration-skip-ink: none;
+  }
+  .pn-results :global(.pn-sub) {
+    display: block;
+    font-family: var(--f-hand);
+    font-size: 1.05rem;
+    line-height: 1.15;
+    color: var(--ink-soft);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .pn-results :global(.pn-enter) {
+    visibility: hidden;
+  }
+  .pn-results :global(li[aria-selected='true'] .pn-enter) {
+    visibility: visible;
+  }
+  .pn-keys {
+    margin: 12px 0 0;
+    font-family: var(--f-hand);
+    font-size: 1.05rem;
+    color: var(--ink-soft);
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .pn-keys kbd + kbd {
+    margin-left: -2px;
+  }
+  .pn-keys kbd:last-of-type {
+    margin-left: 10px;
+  }
+
+  /* ---------- Carlos ---------- */
+  .pn-guy {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: end;
+    position: relative;
+    margin-left: -70px;
+    animation: pn-rise 0.45s var(--pop) both;
+  }
+  .pn-dialog[data-closing] .pn-guy {
+    animation: pn-rise 0.2s ease-in reverse both;
+  }
+  @keyframes pn-rise {
+    from {
+      transform: translateY(70%);
+    }
+  }
+  .pn-guy-body {
+    transform-origin: 50% 100%;
+    transition: transform 0.3s var(--pop);
+  }
+  .pn-guy-body img {
+    width: 100%;
+    height: auto;
+  }
+  [data-state='idle'] .pn-guy-body {
+    animation: pn-bob 2.6s ease-in-out infinite;
+  }
+  @keyframes pn-bob {
+    50% {
+      transform: translateY(-7px) rotate(-1deg);
+    }
+  }
+  [data-state='thinking'] .pn-guy-body {
+    transform: rotate(-8deg) translate(-6px, 4px);
+  }
+  [data-state='found'] .pn-guy-body {
+    animation: pn-hop 0.55s var(--pop);
+  }
+  @keyframes pn-hop {
+    30% {
+      transform: translateY(-26px) rotate(3deg) scaleY(1.04);
+    }
+    60% {
+      transform: translateY(0) scaleY(0.94) scaleX(1.03);
+    }
+  }
+  [data-state='empty'] .pn-guy-body {
+    animation: pn-shrug 0.6s ease-in-out;
+  }
+  @keyframes pn-shrug {
+    15% {
+      transform: rotate(6deg) translateY(-6px);
+    }
+    35% {
+      transform: rotate(-6deg) translateY(-6px);
+    }
+    55% {
+      transform: rotate(4deg) translateY(-3px);
+    }
+    75% {
+      transform: rotate(-2deg);
+    }
+  }
+  [data-state='go'] .pn-guy-body {
+    transform: rotate(6deg) translateX(10px);
+  }
+
+  /* ---------- thought puffs ---------- */
+  .pn-puff,
+  .pn-cloud {
+    position: absolute;
+    background: var(--page);
+    border: var(--line) solid var(--ink);
+    border-radius: 50%;
+    opacity: 0;
+    transform: scale(0.2);
+    transition:
+      transform 0.25s var(--pop),
+      opacity 0.15s;
+  }
+  .pn-puff-1 {
+    width: 14px;
+    height: 12px;
+    left: 70%;
+    top: 6%;
+  }
+  .pn-puff-2 {
+    width: 22px;
+    height: 19px;
+    left: 76%;
+    top: -3%;
+    transition-delay: 0.05s;
+  }
+  .pn-cloud {
+    left: 72%;
+    top: -18%;
+    display: flex;
+    gap: 6px;
+    padding: 12px 16px;
+    border-radius: 50% 46% 52% 48% / 58% 54% 46% 50%;
+    transition-delay: 0.1s;
+  }
+  .pn-cloud i {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--ink);
+    animation: pn-dot 0.9s ease-in-out infinite;
+  }
+  .pn-cloud i:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+  .pn-cloud i:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+  @keyframes pn-dot {
+    30% {
+      transform: translateY(-5px);
+    }
+  }
+  [data-state='thinking'] .pn-puff,
+  [data-state='thinking'] .pn-cloud {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* ---------- phones ---------- */
+  @media (max-width: 720px) {
+    .pn-stage {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto 1fr;
+      align-content: start;
+      padding-top: 14px;
+    }
+    .pn-balloon {
+      padding: 18px 16px 14px;
+    }
+    .pn-balloon::after {
+      right: 70px;
+    }
+    .pn-results {
+      max-height: 44vh;
+    }
+    .pn-keys {
+      display: none;
+    }
+    .pn-guy {
+      grid-column: 1;
+      grid-row: 2;
+      width: 150px;
+      margin-left: 0;
+      margin-top: 30px;
+      align-self: start;
+      justify-self: end;
+      margin-right: 6px;
+    }
+    .pn-puff-1 {
+      left: 22%;
+      top: 10%;
+    }
+    .pn-puff-2 {
+      left: 8%;
+      top: 2%;
+    }
+    .pn-cloud {
+      left: -40%;
+      top: -12%;
+    }
+    /* He stands on an ink floor, like in the hero. */
+    .pn-guy::after {
+      content: '';
+      position: absolute;
+      left: -16px;
+      right: -6px;
+      bottom: 0;
+      border-bottom: var(--line) solid var(--ink);
+    }
+    .pn-results :global(.pn-enter) {
+      display: none;
+    }
+  }
+</style>

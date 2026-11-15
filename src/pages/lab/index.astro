@@ -1,0 +1,68 @@
+---
+import Base from '../../layouts/Base.astro';
+
+// Homepage experiments. Each one is the full homepage with one big idea
+// applied, so they can be compared side by side. Not linked from the site.
+const variants = [
+  { slug: 'ink-rack', name: 'The halftone rack', idea: 'A 3D model of the homelab rack, toon-shaded with ink outlines and printed through a halftone screen.', from: 'mesh3d.gallery, threeui.com' },
+  { slug: 'pull-a-shot', name: 'Pull a shot', idea: 'Hold the lever: a pressure gauge swings and the shot curve inks itself across the panel.', from: 'collectui.com, mesh3d.gallery' },
+  { slug: 'pencils', name: 'Pencils, inks, colors', idea: 'The hero is drawn in production passes on first load: blue pencil, ink, flats, then halftone.', from: 'awwwards.com' },
+  { slug: 'comic-page', name: 'The page assembles', idea: 'The after-hours section is a pinned comic page that builds itself panel by panel as you scroll.', from: 'awwwards.com' },
+  { slug: 'signal-path', name: 'Signal path', idea: 'Inked 3D gear from guitar to monitors. Scroll sends a pulse down the cable; pluck the strings to hear them.', from: 'threeui.com, awwwards.com' },
+  { slug: 'air-gap', name: 'Air gap', idea: 'A WebGL page that unfolds on scroll. Packets bounce off the air gap; the paper dents under the pointer.', from: 'threeui.com' },
+  { slug: 'panel-nav', name: 'Panel index', idea: 'Navigation as a strip of comic panels, page-turn transitions and a search box that speaks from a balloon.', from: 'collectui.com, mobbin.com' },
+];
+---
+<Base title="Lab" noindex>
+  <section class="wrap lab-index">
+    <h1 class="lettering">The lab</h1>
+    <p class="intro">Homepage experiments. Each one is the whole homepage with one idea applied.</p>
+    <ol class="list">
+      {variants.map((v) => (
+        <li>
+          <a class="panel item" href={`/lab/${v.slug}`}>
+            <span class="caption">{v.name}</span>
+            <p>{v.idea}</p>
+            <p class="from">Scouted from {v.from}</p>
+          </a>
+        </li>
+      ))}
+    </ol>
+    <p><a href="/">The current homepage</a></p>
+  </section>
+</Base>
+
+<style>
+  .lab-index h1 {
+    font-size: clamp(3rem, 8vw, 6rem);
+    margin-top: 32px;
+  }
+  .intro {
+    font-size: 1.2rem;
+    max-width: 52ch;
+  }
+  .list {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+    gap: var(--gutter);
+    margin-block: 32px;
+  }
+  .item {
+    display: block;
+    height: 100%;
+    padding-top: 56px;
+    text-decoration: none;
+  }
+  .item:hover p:first-of-type {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 4px;
+  }
+  .from {
+    font-family: var(--f-hand);
+    font-size: 1.1rem;
+    margin-bottom: 0;
+  }
+</style>

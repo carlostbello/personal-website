@@ -1,0 +1,573 @@
+---
+// The espresso rig as a toy: hold the button, the pump builds pressure,
+// the gauge swings and the shot curve inks itself onto the chart.
+// Without JS this renders as one frozen frame mid-shot.
+import { Image } from 'astro:assets';
+import avatar from '../../assets/avatar.png';
+import { home } from '../../lib/copy';
+import { P_MAX, S_MAX, WINDOW, idealShot } from './profile';
+import { CHART, GAUGE, areaPath, cx, cy, gaugeAngle, linePath, polar } from './geom';
+
+const panel = home.lab.panels[1];
+const ideal = idealShot().pts;
+const tip = ideal[ideal.length - 1];
+const idealLine = linePath(ideal);
+const idealArea = areaPath(ideal);
+
+// Gauge ticks, one per bar, longer on the labelled ones.
+const majors = [0, 3, 6, 9, 12];
+const ticks = Array.from({ length: P_MAX + 1 }, (_, b) => {
+  const a = gaugeAngle(b);
+  const [x1, y1] = polar(a, majors.includes(b) ? 44 : 50);
+  const [x2, y2] = polar(a, 57);
+  return `M${x1.toFixed(1)} ${y1.toFixed(1)}L${x2.toFixed(1)} ${y2.toFixed(1)}`;
+}).join('');
+const labels = majors.map((b) => {
+  const [x, y] = polar(gaugeAngle(b), 32);
+  return { b, x, y: y + 5 };
+});
+const [zx1, zy1] = polar(gaugeAngle(8), 50);
+const [zx2, zy2] = polar(gaugeAngle(10), 50);
+const zone = `M${zx1.toFixed(1)} ${zy1.toFixed(1)}A50 50 0 0 1 ${zx2.toFixed(1)} ${zy2.toFixed(1)}`;
+const [px, py] = polar(gaugeAngle(-0.45), 50);
+const frozenBar = 8.9;
+
+// Chart grid: a dot every 2 s and every bar.
+const gx = (CHART.x1 - CHART.x0) / (S_MAX / 2);
+const gy = (CHART.y1 - CHART.y0) / P_MAX;
+const yTicks = [0, 3, 6, 9, 12];
+const xTicks = [0, 10, 20, 30, 40];
+const band = { x: cx(WINDOW[0]), w: cx(WINDOW[1]) - cx(WINDOW[0]) };
+
+// Cup geometry (machine viewBox units).
+const CUP_BOTTOM = 426;
+const frozenFill = 40;
+---
+<div class="panel rig" data-rig>
+  <span class="caption">{panel.caption}</span>
+
+  <div class="rig-machine">
+    <div class="machine-wrap" data-machine>
+      <svg class="machine" viewBox="0 0 400 472" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" data-ink aria-hidden="true">
+        <defs>
+          <pattern id="pas-bay" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(30)">
+            <circle cx="4.5" cy="4.5" r="1.7" fill="var(--field)" stroke="none" />
+          </pattern>
+          <clipPath id="pas-cup">
+            <path d="M158 362H242L236 418C234 428 166 428 164 418Z" />
+          </clipPath>
+        </defs>
+
+        <g class="boil">
+          <!-- cups warming on top -->
+          <path d="M92 20 96 5H122L126 20M138 20 142 7H164L168 20" />
+          <path d="M64 33V20M336 33V20M52 20H348" />
+          <!-- body -->
+          <path d="M44 47C44 39 50 34 58 34L342 33C351 33 356 38 356 47L357 448C357 455 352 460 345 460L56 461C49 461 44 455 44 448Z" fill="var(--page)" />
+          <path d="M44 232H106M294 232H357" />
+          <path d="M70 461V469H100V461M300 461V469H330V461" />
+          <!-- brew bay -->
+          <path d="M106 232H294V438H106Z" fill="url(#pas-bay)" />
+          <!-- knobs -->
+          <circle cx="84" cy="122" r="18" fill="var(--page)" />
+          <circle cx="84" cy="122" r="6" fill="var(--ink)" stroke="none" />
+          <circle cx="316" cy="122" r="18" fill="var(--page)" />
+          <circle cx="316" cy="122" r="6" fill="var(--ink)" stroke="none" />
+          <!-- steam wand and hot water spout -->
+          <path d="M330 172C350 182 348 214 342 300 341 322 338 340 331 354" stroke-width="5" />
+          <path d="M70 172C54 184 56 220 62 268" stroke-width="5" />
+          <!-- gauge -->
+          <circle cx={GAUGE.x} cy={GAUGE.y} r="66" fill="var(--page)" stroke-width="4" />
+          <circle cx={GAUGE.x} cy={GAUGE.y} r="59" stroke-width="2" />
+          <path d={zone} stroke="var(--accent)" stroke-width="9" stroke-linecap="butt" />
+          <path d={ticks} stroke-width="2.5" />
+          <circle cx={px} cy={py} r="3.2" fill="var(--ink)" stroke="none" />
+          <!-- group head -->
+          <path d="M170 232H230L226 250H174Z" fill="var(--page)" />
+          <path d="M152 250H248C252 250 254 253 254 256V264C254 267 252 270 248 270H152C148 270 146 267 146 264V256C146 253 148 250 152 250Z" fill="var(--page)" />
+          <!-- portafilter -->
+          <path d="M160 270H240L234 292C232 298 168 298 166 292Z" fill="var(--page)" />
+          <path d="M162 278 86 286C72 288 72 304 86 302L164 292Z" fill="var(--ink)" />
+          <path d="M182 294H218L214 304H186Z" fill="var(--ink)" />
+          <path d="M189 304 188 313M211 304 212 313" stroke-width="5" />
+          <!-- drip tray and saucer -->
+          <path d="M112 438H288V450C288 454 284 456 280 456H120C116 456 112 454 112 450Z" fill="var(--page)" />
+          <path d="M126 447H274" stroke-dasharray="9 6" />
+          <path d="M140 432C150 439 250 439 260 432" />
+        </g>
+
+        <g fill="var(--ink)" stroke="none" font-family="Patrick Hand" font-size="15" text-anchor="middle">
+          {labels.map((l) => <text x={l.x.toFixed(1)} y={l.y.toFixed(1)}>{l.b}</text>)}
+          <text x={GAUGE.x} y={GAUGE.y + 34}>bar</text>
+        </g>
+
+        <!-- cup, coffee, streams -->
+        <path d="M158 362H242L236 418C234 428 166 428 164 418Z" fill="var(--page)" stroke="none" />
+        <g clip-path="url(#pas-cup)">
+          <rect data-coffee x="150" y={CUP_BOTTOM - frozenFill} width="100" height={frozenFill + 4} fill="var(--ink)" stroke="none" />
+          <rect data-crema x="150" y={CUP_BOTTOM - frozenFill} width="100" height="6" fill="var(--accent)" stroke="none" />
+        </g>
+        <path data-stream d={`M188 316L192 ${CUP_BOTTOM - frozenFill}`} stroke-width="3.5" stroke-dasharray="400 0" />
+        <path data-stream d={`M212 316L208 ${CUP_BOTTOM - frozenFill}`} stroke-width="3.5" stroke-dasharray="400 0" />
+        <path d="M158 362H242L236 418C234 428 166 428 164 418Z" />
+        <path d="M240 374C266 372 266 406 236 404" />
+        <g data-steam class="steam" stroke-width="2.5">
+          <path d="M186 350C178 340 194 334 186 322" stroke-dasharray="5 6" />
+          <path d="M212 352C204 340 220 334 212 320" stroke-dasharray="5 6" />
+        </g>
+
+        <!-- needle -->
+        <g data-needle transform={`rotate(${gaugeAngle(frozenBar)} ${GAUGE.x} ${GAUGE.y})`}>
+          <path d={`M${GAUGE.x} ${GAUGE.y + 12}V${GAUGE.y - 50}`} stroke-width="4" />
+          <path d={`M${GAUGE.x - 4} ${GAUGE.y - 30}L${GAUGE.x} ${GAUGE.y - 52}L${GAUGE.x + 4} ${GAUGE.y - 30}Z`} fill="var(--ink)" stroke-width="2" />
+        </g>
+        <circle cx={GAUGE.x} cy={GAUGE.y} r="7" fill="var(--ink)" stroke="none" />
+
+        <!-- lever: rests down at 28deg, swings up to -55deg while pulling -->
+        <g data-lever transform="rotate(-55 240 248)">
+          <path d="M240 248H304" stroke-width="7" />
+          <circle cx="312" cy="248" r="11" fill="var(--accent)" />
+        </g>
+        <circle cx="240" cy="248" r="6" fill="var(--ink)" stroke="none" />
+      </svg>
+      <div class="sfx-layer" data-sfx aria-hidden="true"></div>
+    </div>
+
+    <div class="controls">
+      <button class="pull" type="button" data-pull aria-describedby="pas-help">Hold to pull</button>
+      <button class="sound" type="button" data-sound aria-pressed="true">Sound on</button>
+    </div>
+    <p class="sr-only" id="pas-help">Press and hold. Space or Enter works too. Let go when the curve reaches the yellow band.</p>
+  </div>
+
+  <div class="rig-chart">
+    <div class="rig-head">
+      <h3 class="lettering">Pull a shot</h3>
+      <p>{panel.line}</p>
+    </div>
+
+    <div class="readouts" aria-hidden="true">
+      <span class="readout"><b data-bar>{frozenBar.toFixed(1)}</b> bar</span>
+      <span class="readout"><b data-sec>{Math.round(tip[0])}</b> s</span>
+      <span class="phase" data-phase>Mid-shot</span>
+    </div>
+
+    <div class="chart-wrap">
+      <svg class="chart" viewBox={`0 0 ${CHART.w} ${CHART.h}`} fill="none" stroke-linecap="round" stroke-linejoin="round" role="img" aria-labelledby="pas-chart-title">
+        <title id="pas-chart-title">Pressure over one shot: a soak at about 3 bar, a climb to about 9, then a slow taper.</title>
+        <defs>
+          <pattern id="pas-grid" x={CHART.x0} y={CHART.y0} width={gx} height={gy} patternUnits="userSpaceOnUse">
+            <circle cx="0" cy="0" r="1.6" fill="var(--ink-soft)" />
+            <circle cx={gx} cy="0" r="1.6" fill="var(--ink-soft)" />
+            <circle cx="0" cy={gy} r="1.6" fill="var(--ink-soft)" />
+            <circle cx={gx} cy={gy} r="1.6" fill="var(--ink-soft)" />
+          </pattern>
+          <pattern id="pas-dots" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <circle cx="4" cy="4" r="2.3" fill="var(--accent)" />
+          </pattern>
+        </defs>
+        <rect x={CHART.x0} y={CHART.y0} width={CHART.x1 - CHART.x0} height={CHART.y1 - CHART.y0} fill="url(#pas-grid)" />
+        <rect class="band" x={band.x} y={CHART.y0} width={band.w} height={CHART.y1 - CHART.y0} fill="var(--accent-tint)" />
+        <path d={`M${band.x} ${CHART.y0}V${CHART.y1}M${band.x + band.w} ${CHART.y0}V${CHART.y1}`} stroke="var(--ink)" stroke-width="2" stroke-dasharray="6 6" />
+        <text class="band-label" x={band.x + band.w / 2} y={CHART.y0 + 22} text-anchor="middle">let go in here</text>
+
+        <path data-ghost d="" stroke="var(--ink-soft)" stroke-width="3" stroke-dasharray="2 9" />
+        <path data-area d={idealArea} fill="url(#pas-dots)" />
+        <path data-line-ink d={idealLine} stroke="var(--ink)" stroke-width="11" />
+        <path data-line d={idealLine} stroke="var(--accent)" stroke-width="5" />
+        <circle data-head cx={cx(tip[0])} cy={cy(tip[1])} r="8" fill="var(--accent)" stroke="var(--ink)" stroke-width="3.5" />
+
+        <path class="boil" d={`M${CHART.x0} ${CHART.y0 - 6}V${CHART.y1}H${CHART.x1 + 6}`} stroke="var(--ink)" stroke-width="4" />
+        <g class="ticks" fill="var(--ink)">
+          {yTicks.map((p) => <text x={CHART.x0 - 12} y={cy(p) + 6} text-anchor="end">{p}</text>)}
+          {xTicks.map((s) => <text x={cx(s)} y={CHART.y1 + 26} text-anchor="middle">{s}</text>)}
+          <text x={CHART.x0 + 10} y={CHART.y0 + 8}>bar</text>
+          <text x={CHART.x1} y={CHART.y1 - 10} text-anchor="end">seconds</text>
+        </g>
+      </svg>
+      <p class="stamp" data-stamp aria-hidden="true"></p>
+    </div>
+
+    <div class="result" data-result-row>
+      <Image src={avatar} alt="" width={84} height={84} class="result-face" />
+      <p class="balloon" data-tail="left" data-result aria-live="polite"></p>
+    </div>
+
+    <div class="rig-foot">
+      <p class="tk">TK Demo curve. Real logs from the rig go here.</p>
+      <a class="more" href={panel.href}>How the rig works</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { mountRig } from './rig';
+
+  let unmount: (() => void) | undefined;
+  document.addEventListener('astro:page-load', () => {
+    unmount?.();
+    const root = document.querySelector<HTMLElement>('[data-rig]');
+    unmount = root ? mountRig(root) : undefined;
+  });
+  document.addEventListener('astro:before-swap', () => {
+    unmount?.();
+    unmount = undefined;
+  });
+</script>
+
+<style>
+  .rig {
+    display: grid;
+    grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+    gap: clamp(20px, 3.5vw, 44px);
+    align-items: start;
+    padding-top: 58px;
+  }
+
+  /* ---------- the machine ---------- */
+  .rig-machine {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+  .machine-wrap {
+    position: relative;
+    width: min(100%, 380px);
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+  :global(.js) .machine-wrap {
+    cursor: pointer;
+  }
+  .machine {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  /* The vibratory pump shakes the whole machine while it runs. */
+  .machine-wrap[data-running] .machine {
+    animation: pump-buzz 0.1s steps(2) infinite;
+  }
+  @keyframes pump-buzz {
+    50% {
+      transform: translate(0.8px, -0.6px);
+    }
+  }
+  .steam {
+    opacity: 0;
+    transition: opacity 0.6s;
+  }
+  .steam[data-on] {
+    opacity: 1;
+    animation: steam 1.6s steps(4) infinite;
+  }
+  @keyframes steam {
+    50% {
+      transform: translateY(-5px);
+    }
+  }
+
+  .controls {
+    display: none;
+    width: min(100%, 380px);
+    gap: 10px;
+    align-items: center;
+  }
+  :global(.js) .controls {
+    display: flex;
+  }
+  .pull {
+    flex: 1;
+    font-family: var(--f-letter);
+    font-size: clamp(1.2rem, 2vw, 1.5rem);
+    line-height: 1;
+    color: var(--ink);
+    background: var(--accent);
+    border: var(--line) solid var(--ink);
+    border-radius: 999px;
+    padding: 18px 16px 16px;
+    white-space: nowrap;
+    cursor: pointer;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    transition:
+      transform 0.18s var(--pop),
+      background-color 0.1s,
+      color 0.1s;
+  }
+  .pull:hover {
+    transform: rotate(-1.5deg);
+  }
+  .pull[data-held] {
+    background: var(--ink);
+    color: var(--accent);
+    transform: translateY(3px) scale(0.97);
+  }
+  .pull:focus-visible,
+  .sound:focus-visible {
+    outline: 3px solid var(--ink);
+    outline-offset: 4px;
+  }
+  .sound {
+    font-family: var(--f-hand);
+    font-size: 1.05rem;
+    line-height: 1.1;
+    color: var(--ink);
+    background: var(--page);
+    border: var(--line) solid var(--ink);
+    border-radius: 999px;
+    padding: 6px 14px;
+    cursor: pointer;
+    width: 6.6em;
+  }
+  .sound[aria-pressed='false'] {
+    text-decoration: line-through;
+    text-decoration-thickness: 2px;
+  }
+
+  /* ---------- sound effects ---------- */
+  .sfx-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .sfx-layer :global(.sfx) {
+    position: absolute;
+    font-family: var(--f-letter);
+    font-size: clamp(1.5rem, 3.6vw, 2.5rem);
+    line-height: 1;
+    color: var(--accent);
+    -webkit-text-stroke: 0.1em var(--ink);
+    paint-order: stroke fill;
+    white-space: nowrap;
+    rotate: var(--r, -8deg);
+    animation: sfx 1.25s var(--pop) both;
+  }
+  .sfx-layer :global(.sfx.small) {
+    font-size: clamp(1.1rem, 2.4vw, 1.6rem);
+  }
+  @keyframes sfx {
+    0% {
+      transform: scale(0.2);
+      opacity: 0;
+    }
+    18% {
+      transform: scale(1.12);
+      opacity: 1;
+    }
+    30% {
+      transform: scale(1);
+    }
+    80% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(0.96) translateY(-10px);
+    }
+  }
+
+  /* ---------- chart side ---------- */
+  .rig-chart {
+    min-width: 0;
+  }
+  .rig-head h3 {
+    font-size: clamp(2rem, 4.2vw, 3.2rem);
+    margin-bottom: 10px;
+  }
+  .rig-head p {
+    max-width: 44ch;
+  }
+  .readouts {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    font-family: var(--f-hand);
+    font-size: 1.25rem;
+    margin: 4px 0 6px;
+  }
+  .readout b {
+    display: inline-block;
+    min-width: 2.2ch;
+    text-align: right;
+    font-weight: 400;
+    font-size: 2.2rem;
+    line-height: 1;
+  }
+  .phase {
+    margin-left: auto;
+    background: var(--accent);
+    border: var(--line) solid var(--ink);
+    padding: 2px 10px 1px;
+    font-size: 1.15rem;
+  }
+  .phase:global(.flash) {
+    animation: phase-pop 0.35s var(--pop);
+  }
+  @keyframes phase-pop {
+    from {
+      transform: scale(0.7) rotate(-4deg);
+    }
+  }
+  .chart-wrap {
+    position: relative;
+  }
+  .chart {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  .band-label,
+  .ticks {
+    font-family: var(--f-hand);
+    font-size: 19px;
+  }
+  .band-label {
+    fill: var(--ink);
+  }
+  .stamp {
+    position: absolute;
+    left: 50%;
+    top: 46%;
+    margin: 0;
+    font-family: var(--f-letter);
+    font-size: clamp(2.4rem, 7vw, 4.6rem);
+    line-height: 1;
+    color: var(--accent);
+    -webkit-text-stroke: 0.09em var(--ink);
+    paint-order: stroke fill;
+    white-space: nowrap;
+    pointer-events: none;
+    transform: translate(-50%, -50%) rotate(-7deg);
+  }
+  .stamp:empty {
+    display: none;
+  }
+  .stamp:global(.hit) {
+    animation: stamp-in 0.45s var(--pop) both;
+  }
+  .stamp[data-tone='bad'] {
+    color: var(--page);
+  }
+  @keyframes stamp-in {
+    from {
+      transform: translate(-50%, -50%) scale(1.8) rotate(-14deg);
+      opacity: 0;
+    }
+  }
+
+  .result {
+    display: none;
+    align-items: flex-end;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .result[data-show] {
+    display: flex;
+  }
+  .result-face {
+    width: 72px;
+    height: auto;
+    flex: none;
+  }
+  .result .balloon {
+    font-size: 1.15rem;
+    padding: 12px 22px;
+    margin-bottom: 34px;
+  }
+  .result[data-show] .balloon {
+    animation: balloon-pop 0.35s var(--pop);
+    transform-origin: 20% 100%;
+  }
+  @keyframes balloon-pop {
+    from {
+      transform: scale(0.5);
+      opacity: 0;
+    }
+  }
+
+  .rig-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px 18px;
+    margin-top: 10px;
+  }
+  .tk {
+    margin: 0;
+    font-family: var(--f-hand);
+    font-size: 1.1rem;
+    color: var(--ink-soft);
+  }
+  .more {
+    font-weight: 700;
+  }
+  .more::after {
+    content: ' →';
+  }
+
+  @media (max-width: 860px) {
+    .rig {
+      display: flex;
+      flex-direction: column;
+    }
+    .rig-chart {
+      display: contents;
+    }
+    .rig-head {
+      order: 0;
+    }
+    .readouts {
+      order: 1;
+    }
+    .chart-wrap {
+      order: 2;
+    }
+    /* Machine and button sit side by side under the chart, so a thumb
+       holding the button still sees the curve draw. */
+    .rig-machine {
+      order: 3;
+      align-self: stretch;
+      flex-direction: row;
+      align-items: center;
+      gap: 14px;
+    }
+    .machine-wrap {
+      width: min(46%, 220px);
+      flex: none;
+    }
+    .controls {
+      flex-direction: column;
+      align-items: stretch;
+      flex: 1;
+    }
+    .sound {
+      width: auto;
+      align-self: flex-start;
+    }
+    .pull {
+      white-space: normal;
+      padding-block: 26px 22px;
+    }
+    .ticks {
+      font-size: 27px;
+    }
+    .band-label {
+      font-size: 21px;
+    }
+    .result {
+      order: 4;
+    }
+    .rig-foot {
+      order: 5;
+    }
+  }
+</style>

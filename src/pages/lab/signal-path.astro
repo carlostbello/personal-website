@@ -1,0 +1,644 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Narrator from '../../components/Narrator.astro';
+import AirGap from '../../components/drawings/AirGap.astro';
+import Rack from '../../components/drawings/Rack.astro';
+import Espresso from '../../components/drawings/Espresso.astro';
+import SignalPath from '../../components/drawings/SignalPath.astro';
+import avatar from '../../assets/avatar.png';
+import { home } from '../../lib/copy';
+import { site } from '../../lib/site';
+import { getPosts } from '../../lib/posts';
+import PostList from '../../components/PostList.astro';
+
+const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order).slice(0, 3);
+const posts = (await getPosts()).slice(0, 3);
+
+const drawings = [Rack, Espresso];
+const [homelab, espresso, signal] = home.lab.panels;
+const strip = [homelab, espresso];
+
+const person = {
+  '@context': 'https://schema.org',
+  '@type': 'ProfilePage',
+  mainEntity: {
+    '@type': 'Person',
+    name: site.name,
+    url: site.url,
+    sameAs: Object.values(site.social),
+  },
+};
+
+// New strings for this variant. Facts about the gear are TK until Carlos
+// fills them in; the instructions are plain.
+const gear = {
+  hint: 'Pluck the strings. Stomp a pedal.',
+  soundOn: 'Sound on',
+  soundOff: 'Sound off',
+  guitar: { label: 'Pluck the guitar strings. Keys 1 to 6 pick one string.', say: 'TK The guitar I grab first.', hint: 'Click to strum, or drag across.' },
+  drive: { label: 'Drive pedal', say: 'Drive. Makes it dirty.', hint: 'Click to stomp it on.', hintOn: 'On. Strum again.' },
+  echo: { label: 'Echo pedal', say: 'Echo. Says it again.', hint: 'Click to stomp it on.', hintOn: 'On. Strum again.' },
+  iface: { label: 'Audio interface', say: 'TK The audio interface.', hint: 'Everything ends up in here.' },
+  monitors: { label: 'Studio monitors', say: 'TK The monitors.', hint: 'Where the pulse lands.' },
+};
+---
+<Base title="Lab: Signal path" noindex jsonLd={person}>
+  <section class="hero wrap" data-hero>
+    <h1 class="lettering name">
+      <span>Carlos</span>
+      <span>Bello</span>
+    </h1>
+    <p class="role">{home.role}</p>
+    <div class="who" data-lean>
+      <p class="balloon hello">{home.hello}</p>
+      <Image src={avatar} alt="Cartoon of Carlos grinning with his arms crossed" width={420} height={420} loading="eager" class="me" />
+    </div>
+  </section>
+
+  <section class="work wrap" data-say={home.narrator.work}>
+    <div class="panel work-panel">
+      <span class="caption">{home.work.caption}</span>
+      <div class="work-text">
+        <h2 class="lettering">{home.work.heading}</h2>
+        {home.work.body.map((p) => <p>{p}</p>)}
+        <a class="more" href="/talks">{home.work.talksLink}</a>
+      </div>
+      <AirGap />
+    </div>
+  </section>
+
+  <section class="lab wrap" data-say={home.narrator.lab}>
+    <h2 class="lettering section-head">{home.lab.heading}</h2>
+
+    <div class="sp" data-sp>
+      <div class="sp-sticky">
+        <figure class="panel sp-panel">
+          <span class="caption">{signal.caption}</span>
+          <div class="sp-stage" data-sp-stage>
+            <div class="sp-fallback"><SignalPath /></div>
+            <div class="sp-overlay" data-sp-overlay>
+              <button type="button" class="sp-spot" data-spot="guitar" data-sp-say={gear.guitar.say} data-sp-hint={gear.guitar.hint} aria-label={gear.guitar.label}></button>
+              <button type="button" class="sp-spot" data-spot="drive" data-sp-say={gear.drive.say} data-sp-hint={gear.drive.hint} data-sp-hint-on={gear.drive.hintOn} aria-pressed="false" aria-label={gear.drive.label}></button>
+              <button type="button" class="sp-spot" data-spot="echo" data-sp-say={gear.echo.say} data-sp-hint={gear.echo.hint} data-sp-hint-on={gear.echo.hintOn} aria-pressed="false" aria-label={gear.echo.label}></button>
+              <button type="button" class="sp-spot" data-spot="interface" data-sp-say={gear.iface.say} data-sp-hint={gear.iface.hint} aria-label={gear.iface.label}></button>
+              <button type="button" class="sp-spot" data-spot="monitors" data-sp-say={gear.monitors.say} data-sp-hint={gear.monitors.hint} aria-label={gear.monitors.label}></button>
+              <div class="balloon sp-balloon" data-tail="left" data-sp-balloon hidden aria-live="polite">
+                <span data-sp-say></span>
+                <small data-sp-hint></small>
+              </div>
+            </div>
+          </div>
+          <figcaption class="sp-foot">
+            <p class="sp-line">{signal.line}</p>
+            <p class="sp-hint">{gear.hint}</p>
+            <button type="button" class="sp-mute" data-sp-mute aria-pressed="false" data-on={gear.soundOn} data-off={gear.soundOff}>
+              <svg viewBox="0 0 32 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
+                <path d="M3 9h5l7-6v18l-7-6H3z" />
+                <path class="wave" d="M20 8c2 2 2 6 0 8M24 5c4 4 4 10 0 14" />
+                <path class="cross" d="M20 8l8 8M28 8l-8 8" />
+              </svg>
+              <span data-label>{gear.soundOn}</span>
+            </button>
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <div class="strip">
+      {strip.map((p, i) => {
+        const Drawing = drawings[i];
+        return (
+          <a class="panel strip-panel" href={p.href}>
+            <span class="caption">{p.caption}</span>
+            <Drawing />
+            <p>{p.line}</p>
+          </a>
+        );
+      })}
+    </div>
+  </section>
+
+  <section class="projects wrap" data-say={home.narrator.projects}>
+    <h2 class="lettering section-head">{home.projects.heading}</h2>
+    <div class="project-grid">
+      {projects.map((p) => (
+        <a class:list={['panel', 'project', p.data.size]} href={`/projects/${p.id}`}>
+          <h3 transition:name={`project-${p.id}`}>{p.data.title}</h3>
+          <p>{p.data.blurb}</p>
+          <span class="year">{p.data.year}</span>
+        </a>
+      ))}
+    </div>
+    <a class="more on-field" href="/projects">{home.projects.all}</a>
+  </section>
+
+  <section class="log wrap" data-say={home.narrator.log}>
+    <h2 class="lettering section-head">{home.log.heading}</h2>
+    <div class="posts"><PostList posts={posts} showYear /></div>
+    <a class="more on-field" href="/log">{home.log.all}</a>
+  </section>
+
+  <Narrator quips={home.quips} />
+</Base>
+
+<script>
+  import '../../lab/signal-path/main';
+</script>
+
+<style>
+  /* ---------- hero ---------- */
+  .hero {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr minmax(240px, 400px);
+    grid-template-rows: 1fr auto;
+    align-items: end;
+    min-height: min(72vh, 660px);
+    padding-top: 24px;
+    border-bottom: var(--line) solid var(--ink);
+  }
+  .name {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+    font-size: clamp(4rem, 11.5vw, 10rem);
+  }
+  .name span {
+    display: block;
+    animation: stamp 0.5s var(--pop) both;
+  }
+  .name span:nth-child(2) {
+    animation-delay: 0.12s;
+    padding-left: 0.4em;
+  }
+  @keyframes stamp {
+    from {
+      transform: scale(1.35) rotate(-4deg);
+      opacity: 0;
+    }
+  }
+  .role {
+    grid-column: 1;
+    grid-row: 2;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 28px;
+    animation: rise 0.5s var(--snap) 0.35s both;
+  }
+  .who {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    position: relative;
+    transform: rotate(var(--lean, 0deg)) translateY(var(--shift, 0));
+    transform-origin: 50% 100%;
+    transition: transform 0.4s var(--snap);
+  }
+  .me {
+    width: 100%;
+    height: auto;
+    margin-bottom: -2px; /* sit on the hero's ink floor */
+    animation: rise 0.7s var(--pop) 0.2s both;
+  }
+  @keyframes rise {
+    from {
+      transform: translateY(40%);
+      opacity: 0;
+    }
+  }
+  .hello {
+    position: absolute;
+    left: -34%;
+    top: 12%;
+    max-width: 250px;
+    z-index: 2;
+    animation: pop-in 0.4s var(--pop) 0.75s both;
+    transform-origin: 80% 100%;
+  }
+  @keyframes pop-in {
+    from {
+      transform: scale(0.4);
+      opacity: 0;
+    }
+  }
+
+  /* ---------- shared ---------- */
+  section + section {
+    margin-top: clamp(64px, 10vw, 120px);
+  }
+  .section-head {
+    font-size: clamp(2.2rem, 5vw, 3.6rem);
+    margin-bottom: 26px;
+  }
+  .more {
+    display: inline-block;
+    margin-top: 18px;
+    font-weight: 700;
+  }
+  .more::after {
+    content: ' →';
+  }
+
+  /* ---------- work ---------- */
+  .work-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+    gap: clamp(20px, 4vw, 48px);
+    align-items: center;
+    padding-top: 56px;
+  }
+  .work-panel h2 {
+    font-size: clamp(2rem, 4vw, 3rem);
+    margin-bottom: 18px;
+  }
+
+  /* ---------- lab strip: uneven panels, like a comic row ---------- */
+  .strip {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: var(--gutter);
+  }
+  .strip-panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding-top: 52px;
+    text-decoration: none;
+    transition: transform 0.3s var(--pop);
+  }
+  .strip-panel:nth-child(1) {
+    transform: rotate(-0.8deg);
+  }
+  .strip-panel:nth-child(2) {
+    transform: rotate(0.7deg);
+    background: var(--accent);
+  }
+  .strip-panel:hover {
+    transform: rotate(0deg) translateY(-6px);
+  }
+  .strip-panel :global(svg) {
+    width: 100%;
+    max-height: 190px;
+    margin-block: 8px 14px;
+  }
+  .strip-panel p {
+    margin: 0;
+  }
+
+
+  /* ---------- signal path feature ---------- */
+  .sp {
+    --stage-h: min(56vh, 480px);
+    position: relative;
+    margin-bottom: clamp(28px, 5vw, 56px);
+  }
+  .sp-panel {
+    margin: 0;
+    padding: 0;
+  }
+  .sp-stage {
+    position: relative;
+    overflow: hidden;
+    padding: 64px clamp(20px, 6vw, 80px) 24px;
+  }
+  .sp-fallback :global(svg) {
+    width: 100%;
+    max-width: 640px;
+    max-height: 340px;
+    margin-inline: auto;
+  }
+  .sp-overlay {
+    display: none;
+  }
+  .sp-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 22px;
+    padding: 14px clamp(16px, 3vw, 28px);
+    border-top: var(--line) solid var(--ink);
+  }
+  .sp-foot p {
+    margin: 0;
+  }
+  .sp-line {
+    font-weight: 700;
+  }
+  .sp-hint,
+  .sp-mute {
+    display: none;
+  }
+
+  /* Live: a scroll runway with the panel pinned in the middle of it. */
+  .sp-live {
+    height: 230vh;
+  }
+  .sp-live .sp-sticky {
+    position: sticky;
+    top: max(12px, calc(50vh - (var(--stage-h) + 76px) / 2));
+  }
+  .sp-live .sp-stage {
+    height: var(--stage-h);
+    padding: 0;
+  }
+  .sp-live .sp-hint {
+    display: block;
+  }
+  .sp-live .sp-hint {
+    font-family: var(--f-hand);
+    font-size: 1.2rem;
+    line-height: 1.1;
+    color: var(--ink-soft);
+  }
+  .sp-live .sp-fallback {
+    position: absolute;
+    inset: 15% 12%;
+    display: grid;
+    place-items: center;
+    transition: opacity 0.3s;
+  }
+  .sp-ready .sp-fallback {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .sp-ready .sp-overlay {
+    display: block;
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .sp-stage :global(.sp-canvas) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    touch-action: pan-y;
+  }
+
+  /* Hotspots: small marigold studs pinned to the gear. */
+  .sp-spot {
+    position: absolute;
+    left: -13px;
+    top: -13px;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: var(--line) solid var(--ink);
+    border-radius: 50%;
+    background: var(--accent);
+    pointer-events: auto;
+    cursor: pointer;
+    will-change: transform;
+  }
+  .sp-spot::after {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border-radius: 50%;
+    background: var(--ink);
+    transform: scale(0.45);
+    transition: transform 0.2s var(--pop);
+  }
+  .sp-spot:hover::after,
+  .sp-spot:focus-visible::after {
+    transform: scale(0.8);
+  }
+  .sp-spot[aria-pressed='true'] {
+    background: var(--page);
+  }
+  .sp-spot[aria-pressed='true']::after {
+    background: var(--accent);
+    box-shadow: 0 0 0 2px var(--ink);
+    transform: scale(0.8);
+  }
+  .sp-spot:focus-visible {
+    outline: 3px solid var(--ink);
+    outline-offset: 3px;
+  }
+  /* Off-screen studs stay in the tab order; they appear when focused. */
+  .sp-spot:global(.off):not(:focus-visible) {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .sp-balloon {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: max-content;
+    max-width: min(260px, 70%);
+    padding: 12px 22px 14px;
+    font-size: 1.25rem;
+    pointer-events: none;
+    z-index: 3;
+  }
+  .sp-balloon[hidden] {
+    display: none;
+  }
+  .sp-balloon::after {
+    left: var(--tail, 24%);
+  }
+  .sp-balloon small {
+    display: block;
+    font-size: 1rem;
+    color: var(--ink-soft);
+  }
+  .sp-balloon:global(.pop) {
+    animation: sp-pop 0.3s var(--pop);
+  }
+  @keyframes sp-pop {
+    from {
+      opacity: 0;
+      scale: 0.6;
+    }
+  }
+
+  /* Sound effects: a white burst with lettering, stamped and gone. */
+  .sp-overlay :global(.sp-sfx) {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: calc(170px * var(--s, 1));
+    height: calc(120px * var(--s, 1));
+    translate: -50% -50%;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+    z-index: 2;
+    animation: sp-stamp 0.85s var(--snap) both;
+  }
+  .sp-overlay :global(.sp-sfx svg) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .sp-overlay :global(.sp-sfx .lettering) {
+    position: relative;
+    font-size: calc(2rem * var(--s, 1));
+    rotate: var(--r, -6deg);
+  }
+  @keyframes sp-stamp {
+    0% {
+      scale: 1.6;
+      opacity: 0;
+    }
+    18% {
+      scale: 0.94;
+      opacity: 1;
+    }
+    30% {
+      scale: 1;
+    }
+    75% {
+      opacity: 1;
+    }
+    100% {
+      scale: 1.04;
+      opacity: 0;
+    }
+  }
+
+  .sp-mute {
+    margin-left: auto;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 14px 4px 10px;
+    border: var(--line) solid var(--ink);
+    border-radius: 999px;
+    background: var(--page);
+    color: var(--ink);
+    font-family: var(--f-hand);
+    font-size: 1.15rem;
+    line-height: 1.2;
+    cursor: pointer;
+  }
+  .sp-live .sp-mute {
+    display: inline-flex;
+  }
+  .sp-mute svg {
+    width: 26px;
+    height: 20px;
+  }
+  .sp-mute .cross {
+    display: none;
+  }
+  .sp-mute[aria-pressed='true'] .wave {
+    display: none;
+  }
+  .sp-mute[aria-pressed='true'] .cross {
+    display: inline;
+  }
+  .sp-mute:hover {
+    background: var(--accent);
+  }
+
+  @media (max-width: 820px) {
+    .sp-live {
+      height: 260vh;
+    }
+    .sp {
+      --stage-h: min(92vw, 56vh);
+    }
+    .sp-foot {
+      gap: 4px 14px;
+    }
+    .sp-balloon {
+      font-size: 1.1rem;
+      padding: 10px 18px 12px;
+    }
+  }
+
+  /* ---------- projects ---------- */
+  .project-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: var(--gutter);
+  }
+  .project {
+    grid-column: span 3;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    min-height: 200px;
+  }
+  .project.wide {
+    grid-column: span 6;
+    background: var(--accent);
+    min-height: 240px;
+  }
+  .project h3 {
+    font-family: var(--f-letter);
+    font-size: clamp(1.6rem, 3vw, 2.4rem);
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+  .project.wide h3 {
+    font-size: clamp(2.4rem, 6vw, 4.5rem);
+  }
+  .project p {
+    max-width: 52ch;
+  }
+  .year {
+    margin-top: auto;
+    font-family: var(--f-hand);
+    font-size: 1.2rem;
+  }
+  .project:hover h3 {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 5px;
+  }
+  .project.wide:hover h3 {
+    text-decoration-color: var(--ink);
+  }
+  .on-field {
+    color: var(--page);
+  }
+
+  /* ---------- log ---------- */
+  .posts {
+    max-width: 820px;
+  }
+
+  /* ---------- small screens ---------- */
+  @media (max-width: 820px) {
+    .hero {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto auto;
+      min-height: 0;
+    }
+    .name,
+    .role,
+    .who {
+      grid-column: 1;
+      grid-row: auto;
+    }
+    .role {
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+    }
+    .who {
+      width: min(300px, 70%);
+      justify-self: end;
+      margin-top: 40px;
+    }
+    .hello {
+      left: -32%;
+      top: -10%;
+      max-width: 190px;
+      font-size: 1.05rem;
+      padding: 14px 22px;
+    }
+    .work-panel,
+    .strip {
+      grid-template-columns: 1fr;
+    }
+    .project,
+    .project.wide {
+      grid-column: span 6;
+    }
+  }
+</style>
