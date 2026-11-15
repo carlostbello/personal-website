@@ -8,9 +8,11 @@ interface Props {
   type?: 'website' | 'article';
   published?: Date;
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  /** Keep a page out of search results (the /lab variants). */
+  noindex?: boolean;
 }
 
-const { title, description = site.description, type = 'website', published, jsonLd } = Astro.props;
+const { title, description = site.description, type = 'website', published, jsonLd, noindex } = Astro.props;
 const fullTitle = title ? `${title} · ${site.name}` : site.name;
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
 const image = new URL(Astro.url.pathname === '/404' ? '/og/index.png' : ogPathFor(Astro.url.pathname), Astro.site).href;
@@ -18,6 +20,7 @@ const ld = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
 ---
 <title>{fullTitle}</title>
 <meta name="description" content={description} />
+{noindex && <meta name="robots" content="noindex" />}
 <link rel="canonical" href={canonical} />
 <link rel="alternate" type="application/rss+xml" title={`${site.name} · Log`} href="/rss.xml" />
 <link rel="sitemap" href="/sitemap-index.xml" />

@@ -8,7 +8,7 @@ export default defineConfig({
   site: 'https://carlostbello.com',
   trailingSlash: 'never',
   build: { format: 'file' },
-  integrations: [react(), mdx(), sitemap({ filter: (page) => !page.includes('/search') })],
+  integrations: [react(), mdx(), sitemap({ filter: (page) => !page.includes('/search') && !page.includes('/lab') })],
   markdown: {
     shikiConfig: { theme: 'github-light' },
   },
