@@ -1,8 +1,8 @@
-// Drives the "pull a shot" panel. The pressure model lives in profile.ts
+// Drives the "pull a shot" section. The pressure model lives in profile.ts
 // (a synthetic demo profile, not logged data); this file is input, the
-// gauge and lever physics, the live chart and the comic reactions.
-import { AUTO_STOP, P_MAX, SPEED, WINDOW, conductance, idealShot, step, target, type Machine } from './profile';
-import { GAUGE, areaPath, cx, cy, gaugeAngle, linePath } from './geom';
+// brew switch, the Gaggiuino screen, the live chart and the comic reactions.
+import { AUTO_STOP, SPEED, WINDOW, conductance, idealShot, step, target, type Machine } from './profile';
+import { CUP_BOTTOM, areaPath, cx, cy, linePath, miniPath, mx, my, streamPath } from './geom';
 import { createAudio } from './audio';
 
 type Phase = 'idle' | 'pull' | 'dump' | 'done';
@@ -15,9 +15,6 @@ const RESULTS: Record<Outcome, { stamp: string; say: string; bad: boolean }> = {
   bitter: { stamp: 'BITTER!', say: 'You held on too long. Bitter.', bad: true },
 };
 
-const LEVER_REST = 28;
-const LEVER_BREW = -55;
-const CUP_BOTTOM = 426;
 const CUP_SCALE = 52; // px of coffee for a full shot
 const STORE = 'pull-a-shot:muted';
 
@@ -40,27 +37,30 @@ const store = {
 
 export function mountRig(root: HTMLElement): () => void {
   const $ = <T extends Element>(sel: string) => root.querySelector<T>(sel)!;
-  const pull = $<HTMLButtonElement>('[data-pull]');
-  const soundBtn = $<HTMLButtonElement>('[data-sound]');
-  const machine = $<HTMLElement>('[data-machine]');
-  const sfxLayer = $<HTMLElement>('[data-sfx]');
-  const needleEl = $<SVGGElement>('[data-needle]');
-  const leverEl = $<SVGGElement>('[data-lever]');
-  const coffee = $<SVGRectElement>('[data-coffee]');
-  const crema = $<SVGRectElement>('[data-crema]');
-  const streams = [...root.querySelectorAll<SVGPathElement>('[data-stream]')];
-  const steam = $<SVGGElement>('[data-steam]');
-  const ghost = $<SVGPathElement>('[data-ghost]');
-  const area = $<SVGPathElement>('[data-area]');
-  const lineInk = $<SVGPathElement>('[data-line-ink]');
-  const line = $<SVGPathElement>('[data-line]');
-  const head = $<SVGCircleElement>('[data-head]');
-  const barOut = $<HTMLElement>('[data-bar]');
-  const secOut = $<HTMLElement>('[data-sec]');
-  const phaseOut = $<HTMLElement>('[data-phase]');
-  const stamp = $<HTMLElement>('[data-stamp]');
-  const resultRow = $<HTMLElement>('[data-result-row]');
-  const resultLine = $<HTMLElement>('[data-result]');
+  const pull = $<HTMLButtonElement>('[data-pas-pull]');
+  const soundBtn = $<HTMLButtonElement>('[data-pas-sound]');
+  const machine = $<HTMLElement>('[data-pas-machine]');
+  const sfxLayer = $<HTMLElement>('[data-pas-sfx]');
+  const brewSwitch = $<SVGElement>('[data-pas-brew-switch]');
+  const brewLight = $<SVGElement>('[data-pas-brew-light]');
+  const scrBar = $<SVGTextElement>('[data-pas-scr-bar]');
+  const scrSec = $<SVGTextElement>('[data-pas-scr-sec]');
+  const scrInk = $<SVGPathElement>('[data-pas-scr-ink]');
+  const scrLine = $<SVGPathElement>('[data-pas-scr-line]');
+  const scrHead = $<SVGCircleElement>('[data-pas-scr-head]');
+  const coffee = $<SVGRectElement>('[data-pas-coffee]');
+  const crema = $<SVGRectElement>('[data-pas-crema]');
+  const streams = [...root.querySelectorAll<SVGPathElement>('[data-pas-stream]')];
+  const steam = $<SVGGElement>('[data-pas-steam]');
+  const ghost = $<SVGPathElement>('[data-pas-ghost]');
+  const area = $<SVGPathElement>('[data-pas-area]');
+  const lineInk = $<SVGPathElement>('[data-pas-line-ink]');
+  const line = $<SVGPathElement>('[data-pas-line]');
+  const head = $<SVGCircleElement>('[data-pas-head]');
+  const phaseOut = $<HTMLElement>('[data-pas-phase]');
+  const stamp = $<HTMLElement>('[data-pas-stamp]');
+  const resultRow = $<HTMLElement>('[data-pas-result-row]');
+  const resultLine = $<HTMLElement>('[data-pas-result]');
 
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const ideal = idealShot();
@@ -79,12 +79,7 @@ export function mountRig(root: HTMLElement): () => void {
   let fired = new Set<string>();
   let outcome: Outcome = 'good';
   let finishAt = 0;
-  let needle = 0;
-  let needleV = 0;
-  let lever = LEVER_REST;
-  let leverV = 0;
   let dash = 0;
-  let clock = 0;
   let raf = 0;
   let drawn = 0;
   let last = 0;
@@ -94,10 +89,12 @@ export function mountRig(root: HTMLElement): () => void {
   // ---- the resting frame (the server rendered a frozen mid-shot) ----
   function rest() {
     ghost.setAttribute('d', linePath(ideal.pts));
-    for (const el of [area, lineInk, line]) el.setAttribute('d', '');
+    for (const el of [area, lineInk, line, scrInk, scrLine]) el.setAttribute('d', '');
     head.style.display = 'none';
-    barOut.textContent = '0.0';
-    secOut.textContent = '0';
+    scrHead.style.display = 'none';
+    scrBar.textContent = '0.0';
+    scrSec.textContent = 'ready';
+    setBrew(false);
     setPhase('Ready');
     render();
   }
@@ -105,18 +102,23 @@ export function mountRig(root: HTMLElement): () => void {
   function setPhase(text: string) {
     if (phaseOut.textContent === text) return;
     phaseOut.textContent = text;
-    phaseOut.classList.remove('flash');
+    phaseOut.classList.remove('pas-flash');
     void phaseOut.offsetWidth;
-    phaseOut.classList.add('flash');
+    phaseOut.classList.add('pas-flash');
+  }
+
+  function setBrew(on: boolean) {
+    brewSwitch.toggleAttribute('data-on', on);
+    brewLight.toggleAttribute('data-on', on);
   }
 
   function sfx(word: string, x: number, y: number, rot = -8, small = false) {
     const el = document.createElement('span');
-    el.className = small ? 'sfx small' : 'sfx';
+    el.className = small ? 'pas-sfx pas-small' : 'pas-sfx';
     el.textContent = word;
     el.style.left = `${x}%`;
     el.style.top = `${y}%`;
-    el.style.setProperty('--r', `${rot}deg`);
+    el.style.setProperty('--pas-r', `${rot}deg`);
     sfxLayer.append(el);
     timers.push(window.setTimeout(() => el.remove(), 1300));
   }
@@ -132,7 +134,7 @@ export function mountRig(root: HTMLElement): () => void {
     if (held || phase === 'pull' || phase === 'dump') return;
     held = true;
     ghost.setAttribute('d', linePath(pts.length > 2 ? pts : ideal.pts));
-    for (const el of [area, lineInk, line]) el.setAttribute('d', '');
+    for (const el of [area, lineInk, line, scrInk, scrLine]) el.setAttribute('d', '');
     pts = [[0, 0]];
     drawn = 0;
     lastPt = 0;
@@ -144,15 +146,18 @@ export function mountRig(root: HTMLElement): () => void {
     peak = 8.7 + Math.random() * 0.6;
     fired = new Set();
     stamp.textContent = '';
-    stamp.classList.remove('hit');
+    stamp.classList.remove('pas-hit');
     resultRow.removeAttribute('data-show');
     steam.removeAttribute('data-on');
     head.style.display = '';
+    scrHead.style.display = '';
     phase = 'pull';
     pull.setAttribute('data-held', '');
     machine.setAttribute('data-running', '');
+    setBrew(true);
     audio.start();
-    sfx('HSSSS', 2, 47, -10);
+    sfx('CLACK', 60, 27, 8, true);
+    sfx('BZZZ', 0, 70, -10);
     setPhase('Pre-infusion');
     kick();
   }
@@ -169,9 +174,10 @@ export function mountRig(root: HTMLElement): () => void {
     pull.removeAttribute('data-held');
     machine.removeAttribute('data-running');
     held = false;
+    setBrew(false);
     outcome = s < 5 ? 'rinse' : s < WINDOW[0] ? 'sour' : s <= WINDOW[1] ? 'good' : 'bitter';
     audio.dump();
-    sfx('PSSHT', 56, 50, 9);
+    sfx('PSSHT', 52, 52, 9);
     setPhase('Valve open');
     finishAt = s + 1.6;
   }
@@ -183,34 +189,30 @@ export function mountRig(root: HTMLElement): () => void {
     stamp.textContent = r.stamp;
     if (r.bad) stamp.setAttribute('data-tone', 'bad');
     else stamp.removeAttribute('data-tone');
-    stamp.classList.remove('hit');
+    stamp.classList.remove('pas-hit');
     void stamp.offsetWidth;
-    stamp.classList.add('hit');
+    stamp.classList.add('pas-hit');
     if (outcome === 'good') {
       steam.setAttribute('data-on', '');
-      sfx('drip', 64, 74, 6, true);
+      sfx('drip', 62, 76, 6, true);
     }
     say(r.say);
   }
 
-  /** Desktop: the corner narrator reacts. Phones (no narrator): a balloon in the panel. */
+  /**
+   * Ask the page's narrator to react. A listener that actually shows the
+   * line calls preventDefault(); if nobody does (no narrator, or it is
+   * hidden on phones) the reaction shows as a balloon inside the panel.
+   */
   function say(text: string) {
-    const nar = document.querySelector<HTMLElement>('[data-narrator]');
-    const nline = nar?.querySelector<HTMLElement>('[data-line]');
-    if (nar && nline && nar.hasAttribute('data-on') && getComputedStyle(nar).display !== 'none') {
-      nline.textContent = text;
-      nline.classList.remove('pop');
-      void nline.offsetWidth;
-      nline.classList.add('pop');
-      return;
-    }
+    const ev = new CustomEvent<string>('narrator:say', { detail: text, cancelable: true });
+    if (!window.dispatchEvent(ev)) return;
     resultLine.textContent = text;
     resultRow.setAttribute('data-show', '');
   }
 
   // ---- simulation ----
   function simulate(dt: number) {
-    clock += dt;
     if (phase === 'pull' || phase === 'dump') {
       const ds = dt * SPEED;
       s += ds;
@@ -225,10 +227,10 @@ export function mountRig(root: HTMLElement): () => void {
       }
 
       if (phase === 'pull') {
-        if (s > 5.6) once('drip', () => sfx('drip', 64, 72, 6, true));
+        if (s > 5.6) once('drip', () => sfx('drip', 62, 74, 6, true));
         if (s > 7) once('ramp', () => setPhase('Ramping up'));
-        if (m.p > 8.4) once('peak', () => (sfx('9 BAR!', 60, 2, 7), setPhase('Holding 9 bar')));
-        if (s > 17) once('taper', () => setPhase('Tapering'));
+        if (m.p > 8.4) once('peak', () => (sfx('9 BAR!', 56, 4, 7), setPhase('Holding 9 bar')));
+        if (s > 17) once('taper', () => setPhase('Decline'));
         if (s > WINDOW[0]) once('window', () => setPhase('Let go!'));
         if (s > WINDOW[1]) once('late', () => setPhase('Too long!'));
         if (s >= AUTO_STOP) release();
@@ -248,58 +250,15 @@ export function mountRig(root: HTMLElement): () => void {
       }
     }
 
-    // Gauge needle: a light, underdamped spring chasing the pressure,
-    // with a hard peg at zero it bounces off. The pump buzz shakes it.
-    const buzz = phase === 'pull' && !reduced ? 0.09 * Math.sin(clock * 83) + 0.05 * Math.sin(clock * 151) : 0;
-    const goal = m.p + buzz;
-    const wn = reduced ? 40 : 15;
-    const z = reduced ? 1 : 0.2;
-    const lw = reduced ? 50 : 26;
-    const lz = reduced ? 1 : 0.32;
-    const leverGoal = phase === 'pull' ? LEVER_BREW : LEVER_REST;
-    const n = Math.ceil(dt / 0.004);
-    const h = dt / n;
-    for (let i = 0; i < n; i++) {
-      needleV += (wn * wn * (goal - needle) - 2 * z * wn * needleV) * h;
-      needle += needleV * h;
-      if (needle < 0) {
-        needle = 0;
-        needleV = Math.abs(needleV) < 0.6 ? 0 : -needleV * 0.45;
-      } else if (needle > P_MAX + 0.6) {
-        needle = P_MAX + 0.6;
-        needleV = -needleV * 0.4;
-      }
-      // The lever swings to its stop, clacks and settles.
-      leverV += (lw * lw * (leverGoal - lever) - 2 * lz * lw * leverV) * h;
-      lever += leverV * h;
-      if (lever < LEVER_BREW) {
-        lever = LEVER_BREW;
-        leverV = -leverV * 0.35;
-      } else if (lever > LEVER_REST) {
-        lever = LEVER_REST;
-        leverV = -leverV * 0.35;
-      }
-    }
     dash -= dt * 140;
   }
 
   function settled() {
-    return (
-      phase !== 'pull' &&
-      phase !== 'dump' &&
-      flow === 0 &&
-      Math.abs(needle) < 0.01 &&
-      Math.abs(needleV) < 0.01 &&
-      Math.abs(lever - LEVER_REST) < 0.05 &&
-      Math.abs(leverV) < 0.05
-    );
+    return phase !== 'pull' && phase !== 'dump' && flow === 0;
   }
 
   // ---- drawing ----
   function render() {
-    needleEl.setAttribute('transform', `rotate(${gaugeAngle(needle).toFixed(2)} ${GAUGE.x} ${GAUGE.y})`);
-    leverEl.setAttribute('transform', `rotate(${lever.toFixed(2)} 240 248)`);
-
     const level = Math.min(60, fill * CUP_SCALE);
     const top = CUP_BOTTOM - level;
     coffee.setAttribute('y', top.toFixed(1));
@@ -314,7 +273,7 @@ export function mountRig(root: HTMLElement): () => void {
         return;
       }
       el.style.display = '';
-      el.setAttribute('d', i ? `M212 316L208 ${top.toFixed(1)}` : `M188 316L192 ${top.toFixed(1)}`);
+      el.setAttribute('d', streamPath(i, top));
       el.setAttribute('stroke-width', (1.5 + 3 * f).toFixed(2));
       // Thin flow breaks into drops; full flow is one solid rope.
       el.setAttribute('stroke-dasharray', f > 0.35 ? '400 0' : `${(3 + 30 * f).toFixed(1)} ${(16 - 30 * f).toFixed(1)}`);
@@ -327,13 +286,19 @@ export function mountRig(root: HTMLElement): () => void {
       line.setAttribute('d', d);
       lineInk.setAttribute('d', d);
       area.setAttribute('d', areaPath(pts));
+      const mini = miniPath(pts);
+      scrInk.setAttribute('d', mini);
+      scrLine.setAttribute('d', mini);
     }
     if (pts.length) {
       const tip = pts[pts.length - 1];
-      head.setAttribute('cx', cx(s > tip[0] ? s : tip[0]).toFixed(1));
+      const hs = s > tip[0] ? s : tip[0];
+      head.setAttribute('cx', cx(hs).toFixed(1));
       head.setAttribute('cy', cy(m.p).toFixed(1));
-      barOut.textContent = m.p.toFixed(1);
-      secOut.textContent = String(Math.floor(s));
+      scrHead.setAttribute('cx', mx(hs).toFixed(1));
+      scrHead.setAttribute('cy', my(m.p).toFixed(1));
+      scrBar.textContent = m.p.toFixed(1);
+      scrSec.textContent = `${Math.floor(s)}s`;
     }
   }
 
@@ -412,12 +377,7 @@ export function mountRig(root: HTMLElement): () => void {
 
   // With reduced motion, keep the server's complete mid-shot frame until
   // someone actually pulls; otherwise start from a cold machine.
-  if (reduced) {
-    needle = 8.9;
-    lever = LEVER_BREW;
-  } else {
-    rest();
-  }
+  if (!reduced) rest();
 
   return () => {
     cancelAnimationFrame(raf);

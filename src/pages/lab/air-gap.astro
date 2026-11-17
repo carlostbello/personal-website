@@ -3,7 +3,7 @@ import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import Narrator from '../../components/Narrator.astro';
-import AirGap from '../../components/drawings/AirGap.astro';
+import WorkSection from '../../lab/air-gap/WorkSection.astro';
 import Rack from '../../components/drawings/Rack.astro';
 import Espresso from '../../components/drawings/Espresso.astro';
 import SignalPath from '../../components/drawings/SignalPath.astro';
@@ -31,23 +31,7 @@ const drawings = [Rack, Espresso, SignalPath];
     </div>
   </section>
 
-  <section class="work wrap" data-say={home.narrator.work}>
-    <div class="panel work-panel">
-      <span class="caption">{home.work.caption}</span>
-      <h2 class="lettering">{home.work.heading}</h2>
-      <div class="work-text">
-        {home.work.body.map((p) => <p>{p}</p>)}
-        <a class="more" href="/talks">{home.work.talksLink}</a>
-      </div>
-    </div>
-    <div class="sheet-wrap">
-      <div class="sheet" data-airgap>
-        <div class="sheet-fallback panel"><AirGap /></div>
-        <canvas aria-hidden="true"></canvas>
-      </div>
-      <button type="button" class="send" data-send hidden>Try to send one out</button>
-    </div>
-  </section>
+  <WorkSection say={home.narrator.work} />
 
   <section class="lab wrap" data-say={home.narrator.lab}>
     <h2 class="lettering section-head">{home.lab.heading}</h2>
@@ -87,44 +71,6 @@ const drawings = [Rack, Espresso, SignalPath];
 
   <Narrator quips={home.quips} />
 </Base>
-
-<script>
-  // The sheet (and three.js with it) only loads once it is near the screen,
-  // and never under reduced motion: then the inked drawing stays.
-  let cleanup: (() => void) | null = null;
-  let io: IntersectionObserver | null = null;
-  let alive = 0;
-
-  document.addEventListener('astro:page-load', () => {
-    const el = document.querySelector<HTMLElement>('[data-airgap]');
-    if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const ticket = ++alive;
-    io = new IntersectionObserver(
-      async ([e]) => {
-        if (!e.isIntersecting) return;
-        io?.disconnect();
-        try {
-          const { mountAirGap } = await import('../../lab/air-gap/scene');
-          if (ticket !== alive) return;
-          const done = await mountAirGap(el);
-          if (ticket === alive) cleanup = done;
-          else done();
-        } catch {
-          el.classList.add('no-gl');
-        }
-      },
-      { rootMargin: '400px 0px' },
-    );
-    io.observe(el);
-  });
-
-  document.addEventListener('astro:before-swap', () => {
-    alive++;
-    io?.disconnect();
-    cleanup?.();
-    cleanup = null;
-  });
-</script>
 
 <style>
   /* ---------- hero ---------- */
@@ -203,7 +149,7 @@ const drawings = [Rack, Espresso, SignalPath];
   }
 
   /* ---------- shared ---------- */
-  section + section {
+  :global(main > section ~ section) {
     margin-top: clamp(64px, 10vw, 120px);
   }
   .section-head {
@@ -217,86 +163,6 @@ const drawings = [Rack, Espresso, SignalPath];
   }
   .more::after {
     content: ' →';
-  }
-
-  /* ---------- work: the copy in a panel, the diagram on a sheet ---------- */
-  .work-panel {
-    display: grid;
-    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-    gap: clamp(16px, 4vw, 48px);
-    align-items: start;
-    padding-top: 56px;
-    max-width: 980px;
-  }
-  .work-panel h2 {
-    font-size: clamp(2rem, 4vw, 3rem);
-  }
-  .work-text p:last-of-type {
-    margin-bottom: 0;
-  }
-  .sheet-wrap {
-    margin-top: clamp(20px, 3vw, 32px);
-  }
-  .sheet {
-    position: relative;
-  }
-  .sheet canvas {
-    display: none;
-  }
-  /* With JS and motion, reserve the sheet's box up front so nothing jumps
-     when the paper takes over from the drawing. */
-  @media (prefers-reduced-motion: no-preference) {
-    :global(.js) .sheet:not(.no-gl) {
-      aspect-ratio: 1200 / 560;
-    }
-    :global(.js) .sheet:not(.no-gl) .sheet-fallback {
-      height: 100%;
-      display: grid;
-      place-items: center;
-    }
-  }
-  @media (prefers-reduced-motion: no-preference) and (max-width: 640px) {
-    :global(.js) .sheet:not(.no-gl) {
-      aspect-ratio: 600 / 1040;
-    }
-  }
-  .sheet.live .sheet-fallback,
-  :global(.js) .sheet.live .sheet-fallback {
-    display: none;
-  }
-  .sheet.live canvas {
-    display: block;
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    cursor: pointer;
-    touch-action: pan-y;
-  }
-  .sheet-fallback :global(svg) {
-    width: 100%;
-  }
-  .send {
-    display: block;
-    margin: 14px 0 0;
-    font-family: var(--f-hand);
-    font-size: 1.2rem;
-    line-height: 1.1;
-    color: var(--ink);
-    background: var(--accent);
-    border: var(--line) solid var(--ink);
-    padding: 7px 16px 6px;
-    cursor: pointer;
-    transition: transform 0.15s var(--pop);
-  }
-  .send:hover {
-    transform: rotate(-2deg);
-  }
-  .send:active {
-    transform: scale(0.94);
-  }
-  .send[hidden] {
-    display: none;
   }
 
   /* ---------- lab strip: uneven panels, like a comic row ---------- */
@@ -413,7 +279,6 @@ const drawings = [Rack, Espresso, SignalPath];
       font-size: 1.05rem;
       padding: 14px 22px;
     }
-    .work-panel,
     .strip {
       grid-template-columns: 1fr;
     }

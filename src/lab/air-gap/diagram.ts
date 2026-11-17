@@ -5,6 +5,31 @@
 
 export type Pt = { x: number; y: number };
 
+/** Every word drawn into the canvas. WorkSection passes these in as JSON. */
+export interface Labels {
+  boundary: string;
+  docs: string;
+  index: string;
+  model: string;
+  servers: string;
+  internet: string;
+  gap: string;
+  thunk: string;
+  blocked: string;
+}
+
+export const defaultLabels: Labels = {
+  boundary: 'the network that stays offline',
+  docs: 'your docs',
+  index: 'index',
+  model: 'model',
+  servers: 'servers',
+  internet: 'the internet',
+  gap: 'AIR GAP',
+  thunk: 'THUNK!',
+  blocked: 'BLOCKED!',
+};
+
 export interface Layout {
   kind: 'wide' | 'tall';
   w: number;
@@ -19,13 +44,15 @@ export interface Layout {
   boundaryLabel: Pt;
   nodes: { docs: Pt; index: Pt; model: Pt; servers: Pt };
   labels: { text: string; at: Pt }[];
+  /** Widest a node label may be before its lettering shrinks. */
+  labelMax: number;
   /** Closed loop the packets travel inside the network. */
   loop: Pt[];
   /** Places packets try to leave from. */
   exits: Pt[];
 }
 
-export function layoutFor(kind: 'wide' | 'tall'): Layout {
+export function layoutFor(kind: 'wide' | 'tall', t: Labels = defaultLabels): Layout {
   if (kind === 'wide') {
     const docs = { x: 545, y: 215 };
     const index = { x: 800, y: 215 };
@@ -43,12 +70,13 @@ export function layoutFor(kind: 'wide' | 'tall'): Layout {
       boundaryLabel: { x: 452, y: 58 },
       nodes: { docs, index, model, servers },
       labels: [
-        { text: 'your docs', at: { x: docs.x, y: 128 } },
-        { text: 'index', at: { x: index.x, y: 128 } },
-        { text: 'model', at: { x: model.x, y: 128 } },
-        { text: 'servers', at: { x: servers.x, y: 474 } },
-        { text: 'the internet', at: { x: 174, y: 336 } },
+        { text: t.docs, at: { x: docs.x, y: 128 } },
+        { text: t.index, at: { x: index.x, y: 128 } },
+        { text: t.model, at: { x: model.x, y: 128 } },
+        { text: t.servers, at: { x: servers.x, y: 474 } },
+        { text: t.internet, at: { x: 174, y: 336 } },
       ],
+      labelMax: 230,
       loop: [docs, index, model, { x: model.x, y: servers.y }, servers, { x: docs.x, y: servers.y }],
       exits: [docs, { x: docs.x, y: servers.y }],
     };
@@ -69,12 +97,13 @@ export function layoutFor(kind: 'wide' | 'tall'): Layout {
     boundaryLabel: { x: 46, y: 338 },
     nodes: { docs, index, model, servers },
     labels: [
-      { text: 'your docs', at: { x: docs.x, y: 414 } },
-      { text: 'index', at: { x: index.x, y: 414 } },
-      { text: 'servers', at: { x: servers.x, y: 880 } },
-      { text: 'model', at: { x: model.x, y: 880 } },
-      { text: 'the internet', at: { x: 300, y: 196 } },
+      { text: t.docs, at: { x: docs.x, y: 414 } },
+      { text: t.index, at: { x: index.x, y: 414 } },
+      { text: t.servers, at: { x: servers.x, y: 880 } },
+      { text: t.model, at: { x: model.x, y: 880 } },
+      { text: t.internet, at: { x: 300, y: 196 } },
     ],
+    labelMax: 240,
     loop: [docs, index, model, servers],
     exits: [docs, index],
   };
@@ -134,9 +163,23 @@ function arrowHead(ctx: CanvasRenderingContext2D, at: Pt, dir: Pt, size = 13) {
   ctx.stroke();
 }
 
-function handText(ctx: CanvasRenderingContext2D, text: string, at: Pt, size: number, c: Palette, align: CanvasTextAlign = 'center') {
+/** Largest font size (down to 40% of `size`) at which `text` fits in `max`. */
+function fitFont(ctx: CanvasRenderingContext2D, text: string, size: number, max: number, family: string) {
+  let s = size;
+  ctx.font = `${s}px ${family}`;
+  while (s > size * 0.4 && ctx.measureText(text).width > max) {
+    s -= 1;
+    ctx.font = `${s}px ${family}`;
+  }
+  return s;
+}
+
+const HAND = '"Patrick Hand", "Comic Sans MS", cursive';
+const LETTER = '"Bowlby One", "Arial Black", sans-serif';
+
+function handText(ctx: CanvasRenderingContext2D, text: string, at: Pt, size: number, c: Palette, align: CanvasTextAlign = 'center', max = Infinity) {
   ctx.save();
-  ctx.font = `${size}px "Patrick Hand", "Comic Sans MS", cursive`;
+  fitFont(ctx, text, size, max, HAND);
   ctx.textAlign = align;
   ctx.textBaseline = 'middle';
   ctx.lineJoin = 'round';
@@ -257,7 +300,7 @@ function serversIcon(ctx: CanvasRenderingContext2D, at: Pt, r: () => number, c: 
 }
 
 /** Paint the whole diagram into `canvas` at `scale` pixels per logical unit. */
-export function drawDiagram(canvas: HTMLCanvasElement, L: Layout, c: Palette, scale: number) {
+export function drawDiagram(canvas: HTMLCanvasElement, L: Layout, c: Palette, scale: number, t: Labels = defaultLabels) {
   canvas.width = Math.round(L.w * scale);
   canvas.height = Math.round(L.h * scale);
   const ctx = canvas.getContext('2d')!;
@@ -306,7 +349,7 @@ export function drawDiagram(canvas: HTMLCanvasElement, L: Layout, c: Palette, sc
   const B = L.boundary;
   roundRect(ctx, B.x, B.y, B.w, B.h, 22);
   ctx.stroke();
-  handText(ctx, 'the network that stays offline', L.boundaryLabel, L.kind === 'wide' ? 30 : 27, c, 'left');
+  handText(ctx, t.boundary, L.boundaryLabel, L.kind === 'wide' ? 30 : 27, c, 'left', B.w - 40);
 
   ctx.lineWidth = 4;
   docsIcon(ctx, n.docs, r, c);
@@ -314,7 +357,7 @@ export function drawDiagram(canvas: HTMLCanvasElement, L: Layout, c: Palette, sc
   modelIcon(ctx, n.model, r, c);
   serversIcon(ctx, n.servers, r, c);
 
-  for (const l of L.labels) handText(ctx, l.text, l.at, 28, c);
+  for (const l of L.labels) handText(ctx, l.text, l.at, 28, c, 'center', l.text === t.internet ? L.outside.w - 30 : L.labelMax);
 
   // The air gap: two heavy ink rules with lettering between them.
   ctx.lineWidth = 10;
@@ -334,12 +377,12 @@ export function drawDiagram(canvas: HTMLCanvasElement, L: Layout, c: Palette, sc
   } else {
     ctx.translate(L.w / 2, mid);
   }
-  ctx.font = '34px "Bowlby One", "Arial Black", sans-serif';
+  const label = t.gap;
+  fitFont(ctx, label, 34, (L.kind === 'wide' ? L.h : L.w) - 60, LETTER);
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.lineWidth = 7;
   ctx.strokeStyle = c.ink;
-  const label = 'AIR GAP';
   ctx.strokeText(label, 0, 2);
   ctx.fillStyle = c.accent;
   ctx.fillText(label, 0, 2);
@@ -381,8 +424,7 @@ export function drawBurst(canvas: HTMLCanvasElement, word: string, c: Palette, s
   ctx.strokeStyle = c.ink;
   ctx.stroke();
   ctx.rotate(-0.06);
-  const size = word.length > 6 ? 78 : 96;
-  ctx.font = `${size}px "Bowlby One", "Arial Black", sans-serif`;
+  fitFont(ctx, word, 96, 400, LETTER);
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.lineWidth = 18;

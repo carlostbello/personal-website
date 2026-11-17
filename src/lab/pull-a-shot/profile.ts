@@ -1,7 +1,7 @@
-// SYNTHETIC DEMO PROFILE. Nothing here comes from the real rig's logs:
-// it is a hand-tuned model of a classic shot (pre-infusion ramp, a ~9 bar
-// plateau, then a taper as the puck erodes) so the panel has something
-// to draw. Swap in logged data once it exists.
+// SYNTHETIC DEMO PROFILE. Nothing here comes from the Gaggiuino's logs:
+// it is a hand-tuned model of a Gaggiuino-style profile (pre-infusion at
+// ~3 bar, a ~9 bar plateau, then a decline as the puck erodes) so the
+// section has something to draw. Swap in logged shots once they exist.
 
 /** Shot seconds per real second. A full shot takes ~9s of holding. */
 export const SPEED = 3.2;
@@ -68,3 +68,10 @@ export function idealShot() {
   }
   return { pts, yieldSum };
 }
+
+/** Phase spans on the chart (shot seconds), matching target() above. */
+export const PHASES = [
+  { label: 'pre-infusion', from: 0, to: 7.5 },
+  { label: '9 bar', from: 9.5, to: 17 },
+  { label: 'decline', from: 17.5, to: 23.5 },
+] as const;

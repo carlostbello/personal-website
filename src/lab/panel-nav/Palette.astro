@@ -1,12 +1,31 @@
 ---
+/*
+  Palette: the balloon command palette. Drop <Palette /> anywhere on a page
+  (once). It builds its own index from the content collections at build
+  time, opens on Cmd/Ctrl+K, and also opens from:
+    - any element with data-pn-open-palette (click; a link keeps its href
+      as the no-JS fallback),
+    - window.dispatchEvent(new CustomEvent('pn:open-palette')).
+  Same-page hash results turn the page; other results peel the corner and
+  leave. Works with or without PanelIndex on the page.
+
+  Props (all optional):
+  - index   A full Entry[] to use instead of the built one.
+  - pages   The page shortcuts listed first (default: Home, Projects, The
+            log, Talks, Search). Ignored when `index` is given.
+*/
 import { Image } from 'astro:assets';
 import avatar from '../../assets/avatar.png';
 import type { Entry } from './search';
+import { buildIndex } from './buildIndex';
+import './turns.css';
 
 interface Props {
-  index: Entry[];
+  index?: Entry[];
+  pages?: Entry[];
 }
-const { index } = Astro.props;
+const { index: given, pages } = Astro.props;
+const index = given ?? (await buildIndex(pages));
 // JSON inside a <script> tag: escape "<" so no string can close the tag.
 const json = JSON.stringify(index).replace(/</g, '\\u003c');
 ---
@@ -43,6 +62,10 @@ const json = JSON.stringify(index).replace(/</g, '\\u003c');
     </div>
   </div>
 </dialog>
+
+<script>
+  import './client';
+</script>
 
 <style>
   .pn-dialog {

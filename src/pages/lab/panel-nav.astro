@@ -10,46 +10,15 @@ import SignalPath from '../../components/drawings/SignalPath.astro';
 import PostList from '../../components/PostList.astro';
 import PanelIndex from '../../lab/panel-nav/PanelIndex.astro';
 import Palette from '../../lab/panel-nav/Palette.astro';
-import type { Entry } from '../../lab/panel-nav/search';
 import avatar from '../../assets/avatar.png';
 import { home } from '../../lib/copy';
-import { getPosts, dateFmt } from '../../lib/posts';
+import { getPosts } from '../../lib/posts';
 
-const allProjects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
-const allPosts = await getPosts();
-const talks = (await getCollection('talks')).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
-const projects = allProjects.slice(0, 3);
-const posts = allPosts.slice(0, 3);
+const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order).slice(0, 3);
+const posts = (await getPosts()).slice(0, 3);
 
 const drawings = [Rack, Espresso, SignalPath];
 
-// The palette's index, built once at build time from the collections.
-const index: Entry[] = [
-  { title: 'Home', sub: 'Back to the top of this page', href: '#top', terms: 'start top hello', suggest: true },
-  { title: 'Projects', sub: 'Every project', href: '/projects', terms: 'work built things', suggest: true },
-  { title: 'The log', sub: 'Every post', href: '/log', terms: 'blog posts writing notes', suggest: true },
-  { title: 'Talks', sub: 'Conference talks', href: '/talks', terms: 'speaking stage slides video', suggest: true },
-  { title: 'Search', sub: 'Full text, all posts', href: '/search', terms: 'find', suggest: false },
-  ...allProjects.map((p) => ({
-    title: p.data.title,
-    sub: `Project, ${p.data.year}`,
-    href: `/projects/${p.id}`,
-    terms: p.data.blurb,
-    suggest: p.data.size === 'wide',
-  })),
-  ...allPosts.map((p) => ({
-    title: p.data.title,
-    sub: `Log, ${dateFmt.short.format(p.data.date)}`,
-    href: `/log/${p.id}`,
-    terms: `${p.data.description} ${p.data.tags.join(' ')}`,
-  })),
-  ...talks.map((t) => ({
-    title: t.data.title,
-    sub: `Talk, ${t.data.event}`,
-    href: '/talks',
-    terms: `${t.data.event} ${t.data.city ?? ''}`,
-  })),
-];
 ---
 <Base title="Lab: Panel index" noindex>
   <section class="hero wrap" id="top" tabindex="-1" data-hero>
@@ -64,7 +33,15 @@ const index: Entry[] = [
     </div>
   </section>
 
-  <PanelIndex />
+  <PanelIndex
+    items={[
+      { label: 'Home', href: '#top' },
+      { label: 'Projects', href: '#projects' },
+      { label: 'Log', href: '#log' },
+      { label: 'Talks', href: '/talks' },
+      { label: 'Search', href: '/search', palette: true },
+    ]}
+  />
 
   <section class="work wrap" data-say={home.narrator.work}>
     <div class="panel work-panel">
@@ -115,114 +92,8 @@ const index: Entry[] = [
   </section>
 
   <Narrator quips={home.quips} />
-  <Palette index={index} />
+  <Palette />
 </Base>
-
-<script>
-  import '../../lab/panel-nav/client';
-</script>
-
-<style is:global>
-  /* ---------- page turn (same-page jumps), scoped to .pn-turn so the
-     site's own panel wipe between pages is untouched ---------- */
-  html.pn-turn body,
-  html.pn-turn body * {
-    view-transition-name: none !important;
-  }
-  html.pn-turn::view-transition-group(root) {
-    animation: none;
-  }
-  html.pn-turn::view-transition-image-pair(root) {
-    isolation: auto;
-    perspective: 2400px;
-  }
-  html.pn-turn::view-transition-old(root),
-  html.pn-turn::view-transition-new(root) {
-    mix-blend-mode: normal;
-    backface-visibility: hidden;
-    transform-origin: 0 50%;
-  }
-  /* Forward: the current page lifts off its left edge and swings away,
-     uncovering the next one. */
-  html.pn-fwd::view-transition-old(root) {
-    z-index: 2;
-    animation: pn-leaf-off 0.6s cubic-bezier(0.5, 0, 0.3, 1) both;
-  }
-  html.pn-fwd::view-transition-new(root) {
-    z-index: 1;
-    animation: pn-under 0.6s cubic-bezier(0.3, 0, 0.2, 1) both;
-  }
-  /* Back: the earlier page swings back over the top. */
-  html.pn-back::view-transition-new(root) {
-    z-index: 2;
-    animation: pn-leaf-off 0.6s cubic-bezier(0.2, 0.7, 0.3, 1) reverse both;
-  }
-  html.pn-back::view-transition-old(root) {
-    z-index: 1;
-    animation: pn-under 0.6s cubic-bezier(0.3, 0, 0.2, 1) reverse both;
-  }
-  @keyframes pn-leaf-off {
-    0% {
-      transform: rotateY(0deg);
-      filter: brightness(1);
-    }
-    100% {
-      transform: rotateY(-88deg);
-      filter: brightness(0.7);
-    }
-  }
-  @keyframes pn-under {
-    0% {
-      transform: translateX(-2%) scale(0.97);
-      filter: brightness(0.6);
-    }
-    100% {
-      transform: none;
-      filter: brightness(1);
-    }
-  }
-
-  /* ---------- corner peel (leaving the page) ---------- */
-  .pn-curl {
-    position: fixed;
-    inset: 0;
-    z-index: 200;
-    pointer-events: none;
-    view-transition-name: pn-curl;
-  }
-  .pn-curl-under {
-    position: absolute;
-    inset: 0;
-    background:
-      radial-gradient(circle, var(--field) 1.5px, transparent 2px) 0 0 / 10px 10px,
-      var(--field-deep);
-    clip-path: polygon(100% 100%, 100% 100%, 100% 100%);
-  }
-  .pn-curl-edge {
-    position: absolute;
-    inset: 0;
-    filter: drop-shadow(3px 0 0 var(--ink)) drop-shadow(-3px 0 0 var(--ink)) drop-shadow(0 3px 0 var(--ink))
-      drop-shadow(0 -3px 0 var(--ink));
-  }
-  .pn-curl-flap {
-    position: absolute;
-    inset: 0;
-    background: var(--page);
-    clip-path: polygon(100% 100%, 100% 100%, 100% 100%);
-  }
-  ::view-transition-old(pn-curl) {
-    animation: pn-curl-out 0.35s ease-in both;
-  }
-  @keyframes pn-curl-out {
-    to {
-      opacity: 0;
-    }
-  }
-
-  html:has(.pn-dialog[open]) {
-    overflow: hidden;
-  }
-</style>
 
 <style>
   /* ---------- hero ---------- */

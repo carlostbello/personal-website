@@ -1,8 +1,8 @@
-// Boots the signal path scene: only with WebGL and full motion, and only
-// once the section gets close to the viewport. three.js is loaded lazily.
+// Boots each signal path panel: only with WebGL and full motion, and only
+// once it gets close to the viewport. three.js is loaded lazily. Without
+// that, the panel keeps its static ink drawing.
 
-let cleanup: (() => void) | null = null;
-let watcher: IntersectionObserver | null = null;
+const cleanups: Array<() => void> = [];
 
 function webgl() {
   try {
@@ -13,43 +13,47 @@ function webgl() {
   }
 }
 
-function mount() {
-  const root = document.querySelector<HTMLElement>('[data-sp]');
-  if (!root) return;
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches || !webgl()) return;
-  root.classList.add('sp-live');
-
+function mountOne(root: HTMLElement) {
+  root.classList.add('sigpath-live');
   let cancelled = false;
-  watcher = new IntersectionObserver(
+  let dispose: (() => void) | null = null;
+  const watcher = new IntersectionObserver(
     async ([e]) => {
       if (!e.isIntersecting) return;
-      watcher?.disconnect();
-      watcher = null;
+      watcher.disconnect();
       try {
         const { createSignalPath } = await import('./scene');
         if (cancelled) return;
-        cleanup = createSignalPath(root);
+        dispose = createSignalPath(root);
       } catch (err) {
         console.error(err);
-        root.classList.remove('sp-live');
+        root.classList.remove('sigpath-live');
       }
     },
     { rootMargin: '400px 0px' },
   );
   watcher.observe(root);
-  const prev = cleanup;
-  cleanup = () => {
+  cleanups.push(() => {
     cancelled = true;
-    prev?.();
-  };
+    watcher.disconnect();
+    dispose?.();
+    root.classList.remove('sigpath-live');
+  });
+}
+
+function mount() {
+  unmount();
+  const roots = document.querySelectorAll<HTMLElement>('[data-sigpath]');
+  if (!roots.length) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches || !webgl()) return;
+  roots.forEach(mountOne);
 }
 
 function unmount() {
-  watcher?.disconnect();
-  watcher = null;
-  cleanup?.();
-  cleanup = null;
+  while (cleanups.length) cleanups.pop()!();
 }
 
 document.addEventListener('astro:page-load', mount);
 document.addEventListener('astro:before-swap', unmount);
+
+export {};

@@ -1,7 +1,7 @@
 // The gear, modeled from primitives. Every solid gets an ink hull.
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import { flatMaterial, hullOf, outlineMaterial, stringMaterial, toonMaterial, type Palette } from './materials';
+import { flatMaterial, grilleMaterial, hullOf, outlineMaterial, stringMaterial, toonMaterial, type Palette } from './materials';
 
 export interface Kit {
   p: Palette;
@@ -282,107 +282,84 @@ export function buildPedal(kit: Kit, body: MatName, kind: 'drive' | 'echo'): Ped
 }
 
 // ---------------------------------------------------------------------
-// Audio interface.
+// Combo amp: tolex cabinet, a control strip along the top, grille cloth
+// over one speaker, a strap handle.
 // ---------------------------------------------------------------------
 
-export interface Interface {
+export interface Amp {
   group: THREE.Group;
-  meters: THREE.Mesh[];
-  anchor: THREE.Object3D;
-}
-
-export function buildInterface(kit: Kit): Interface {
-  const g = new THREE.Group();
-  const W = 2.3;
-  const H = 0.62;
-  const D = 1.3;
-  place(solid(kit, new RoundedBoxGeometry(W, H, D, 3, 0.1), 'page'), 0, H / 2, 0, g);
-  const face = D / 2 + 0.01;
-
-  // Big monitor knob on top.
-  const big = place(solid(kit, new THREE.CylinderGeometry(0.32, 0.34, 0.16, 28), 'field'), 0.62, H + 0.08, -0.02, g);
-  place(new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.02, 0.22), kit.mats.ink), 0, 0.09, -0.12, big);
-  big.rotation.y = 0.6;
-  // Two gain knobs on the face.
-  const small = disc(0.12, 0.12, 18);
-  place(solid(kit, small, 'field'), -0.2, H * 0.55, face + 0.05, g);
-  place(solid(kit, small, 'field'), 0.18, H * 0.55, face + 0.05, g);
-  // Two combo inputs.
-  for (const x of [-0.82, -0.5]) {
-    place(new THREE.Mesh(disc(0.13, 0.03, 20), kit.mats.ink), x, H * 0.5, face, g);
-    place(new THREE.Mesh(disc(0.05, 0.04, 12), kit.mats.page), x, H * 0.5, face + 0.01, g);
-  }
-  // Level meter.
-  const meters: THREE.Mesh[] = [];
-  const seg = new THREE.BoxGeometry(0.08, 0.08, 0.03);
-  for (let i = 0; i < 6; i++) {
-    const m = place(new THREE.Mesh(seg, flatMaterial(kit.p.ink)), 0.48 + i * 0.11, H * 0.5, face, g);
-    meters.push(m);
-  }
-  const anchor = place(new THREE.Object3D(), 0, H + 0.3, 0, g);
-  return { group: g, meters, anchor };
-}
-
-// ---------------------------------------------------------------------
-// Studio monitors.
-// ---------------------------------------------------------------------
-
-export interface Monitor {
-  group: THREE.Group;
+  /** The speaker you can make out through the cloth. It pumps. */
   cone: THREE.Object3D;
   rings: THREE.Mesh[];
+  pilot: THREE.Mesh;
+  jack: THREE.Object3D;
   anchor: THREE.Object3D;
 }
 
-export function buildMonitor(kit: Kit): Monitor {
+export function buildAmp(kit: Kit): Amp {
   const g = new THREE.Group();
-  const W = 1.3;
-  const H = 2.0;
-  const D = 1.2;
-  place(solid(kit, new RoundedBoxGeometry(W, H, D, 3, 0.12), 'field'), 0, H / 2, 0, g);
+  const W = 3.1;
+  const H = 2.45;
+  const D = 1.3;
   const face = D / 2;
-  const wy = H * 0.36;
+  place(solid(kit, new RoundedBoxGeometry(W, H, D, 3, 0.14), 'deep'), 0, H / 2, 0, g);
 
-  // Woofer: ink surround, white cone, ink dust cap. The cone moves.
-  place(solid(kit, new THREE.TorusGeometry(0.47, 0.07, 10, 40), 'ink', false), 0, wy, face + 0.01, g);
-  const cone = place(new THREE.Group(), 0, wy, face - 0.02, g);
-  const profile = [new THREE.Vector2(0.44, 0.06), new THREE.Vector2(0.3, -0.02), new THREE.Vector2(0.15, -0.08), new THREE.Vector2(0.12, -0.085)];
-  const lathe = new THREE.LatheGeometry(profile, 36).rotateX(Math.PI / 2);
-  cone.add(new THREE.Mesh(lathe, kit.mats.page));
-  const cap = new THREE.SphereGeometry(0.14, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2).rotateX(Math.PI / 2).scale(1, 1, 0.6);
-  place(solid(kit, cap, 'ink', false), 0, 0, -0.08, cone);
+  // Control strip.
+  const stripH = 0.46;
+  const stripY = H - 0.13 - stripH / 2;
+  place(solid(kit, new RoundedBoxGeometry(W - 0.26, stripH, 0.05, 2, 0.02), 'page'), 0, stripY, face + 0.01, g);
+  const knob = disc(0.1, 0.1, 20);
+  const pointer = new THREE.BoxGeometry(0.025, 0.09, 0.02);
+  const knobs = 6;
+  for (let i = 0; i < knobs; i++) {
+    const k = place(solid(kit, knob, 'ink', false), -0.62 + i * 0.32, stripY, face + 0.08, g);
+    place(new THREE.Mesh(pointer, kit.mats.page), 0, 0.045, 0.055, k);
+    k.rotation.z = [0.9, -0.4, 0.3, -1.1, 0.6, -0.2][i];
+  }
+  // Input jack on the left, pilot jewel on the right.
+  const jx = -W / 2 + 0.36;
+  place(new THREE.Mesh(disc(0.11, 0.03, 18), kit.mats.ink), jx, stripY, face + 0.045, g);
+  const jack = place(new THREE.Object3D(), jx, stripY, face + 0.05, g);
+  const plug = place(solid(kit, disc(0.075, 0.26, 14), 'page'), jx, stripY, face + 0.17, g);
+  void plug;
+  place(new THREE.Mesh(disc(0.11, 0.03, 18), kit.mats.ink), W / 2 - 0.34, stripY, face + 0.045, g);
+  const pilot = place(
+    new THREE.Mesh(new THREE.SphereGeometry(0.085, 14, 10), flatMaterial(kit.p.ink)),
+    W / 2 - 0.34,
+    stripY,
+    face + 0.07,
+    g,
+  );
 
-  // Tweeter.
-  const ty = H * 0.78;
-  place(new THREE.Mesh(disc(0.22, 0.03, 28), kit.mats.ink), 0, ty, face + 0.01, g);
-  place(solid(kit, new THREE.SphereGeometry(0.1, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2).rotateX(Math.PI / 2), 'page'), 0, ty, face + 0.02, g);
-  // Bass port.
-  const port = place(new THREE.Mesh(new THREE.CircleGeometry(0.07, 16), kit.mats.ink), 0.36, H * 0.1, face + 0.011, g);
-  port.scale.set(1.6, 0.8, 1);
+  // Grille cloth, framed in white piping.
+  const gW = W - 0.34;
+  const gH = H - stripH - 0.5;
+  const gY = 0.17 + gH / 2;
+  place(solid(kit, new RoundedBoxGeometry(gW + 0.08, gH + 0.08, 0.04, 2, 0.02), 'page'), 0, gY, face + 0.005, g);
+  place(new THREE.Mesh(new THREE.PlaneGeometry(gW, gH), grilleMaterial(kit.p, gW, gH)), 0, gY, face + 0.03, g);
 
-  // Sound rings that ripple out of the woofer.
+  // The speaker under the cloth: an ink ring and dust cap.
+  const cone = place(new THREE.Group(), 0, gY, face + 0.035, g);
+  cone.add(new THREE.Mesh(new THREE.RingGeometry(0.56, 0.62, 48), kit.mats.ink));
+  cone.add(new THREE.Mesh(new THREE.RingGeometry(0.2, 0.25, 32), kit.mats.ink));
+
+  // Rings that ripple off the grille when the signal arrives.
   const rings: THREE.Mesh[] = [];
-  const ringGeo = new THREE.TorusGeometry(0.5, 0.035, 4, 48, Math.PI * 1.1).rotateZ(-Math.PI * 0.05);
+  const ringGeo = new THREE.TorusGeometry(0.7, 0.04, 4, 48, Math.PI * 1.1).rotateZ(-Math.PI * 0.05);
   for (let i = 0; i < 3; i++) {
-    const m = new THREE.MeshBasicMaterial({ color: kit.p.ink });
-    const r = place(new THREE.Mesh(ringGeo, m), 0, wy, face + 0.15 + i * 0.01, g);
+    const r = place(new THREE.Mesh(ringGeo, flatMaterial(kit.p.ink)), 0, gY, face + 0.2 + i * 0.01, g);
     r.visible = false;
     rings.push(r);
   }
-  const anchor = place(new THREE.Object3D(), 0, H + 0.2, 0, g);
-  return { group: g, cone, rings, anchor };
-}
 
-// ---------------------------------------------------------------------
-// Desk.
-// ---------------------------------------------------------------------
+  // Strap handle on top, between two ink caps.
+  for (const s of [-1, 1]) place(new THREE.Mesh(new RoundedBoxGeometry(0.22, 0.1, 0.3, 2, 0.03), kit.mats.ink), s * 0.5, H + 0.03, 0, g);
+  const strap = new THREE.TorusGeometry(0.5, 0.055, 8, 28, Math.PI).scale(1, 0.32, 1);
+  place(new THREE.Mesh(strap, kit.mats.ink), 0, H + 0.05, 0, g);
 
-export function buildDesk(kit: Kit, width: number, height: number, depth: number): THREE.Group {
-  const g = new THREE.Group();
-  place(solid(kit, new RoundedBoxGeometry(width, 0.2, depth, 2, 0.06), 'page'), 0, height - 0.1, 0, g);
-  const leg = new THREE.BoxGeometry(0.16, height - 0.2, 0.16);
-  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-    place(solid(kit, leg, 'deep'), sx * (width / 2 - 0.3), (height - 0.2) / 2, sz * (depth / 2 - 0.25), g);
-  }
-  return g;
+  // Corner protectors at the bottom.
+  for (const s of [-1, 1]) place(new THREE.Mesh(new RoundedBoxGeometry(0.22, 0.22, D + 0.04, 2, 0.05), kit.mats.ink), s * (W / 2 - 0.08), 0.1, 0, g);
+
+  const anchor = place(new THREE.Object3D(), 0, H + 0.35, 0, g);
+  return { group: g, cone, rings, pilot, jack, anchor };
 }

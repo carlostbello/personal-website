@@ -1,0 +1,95 @@
+/* Panel-nav global styles, imported by PanelIndex and Palette (Astro
+   bundles it once). Everything is keyed on pn- classes, so nothing here
+   applies until the panel-nav client adds them. */
+
+/* ---------- page turn (same-page jumps), scoped to html.pn-turn so the
+   site's own panel wipe between pages is untouched ---------- */
+html.pn-turn body,
+html.pn-turn body * {
+  view-transition-name: none !important;
+}
+html.pn-turn::view-transition-group(root) {
+  animation: none;
+}
+html.pn-turn::view-transition-image-pair(root) {
+  isolation: auto;
+  perspective: 2400px;
+}
+html.pn-turn::view-transition-old(root),
+html.pn-turn::view-transition-new(root) {
+  mix-blend-mode: normal;
+  backface-visibility: hidden;
+  transform-origin: 0 50%;
+}
+/* Forward: the current page lifts off its left edge and swings away,
+   uncovering the next one. */
+html.pn-turn.pn-fwd::view-transition-old(root) {
+  z-index: 2;
+  animation: pn-leaf-off 0.6s cubic-bezier(0.5, 0, 0.3, 1) both;
+}
+html.pn-turn.pn-fwd::view-transition-new(root) {
+  z-index: 1;
+  animation: pn-under 0.6s cubic-bezier(0.3, 0, 0.2, 1) both;
+}
+/* Back: the earlier page swings back over the top. */
+html.pn-turn.pn-back::view-transition-new(root) {
+  z-index: 2;
+  animation: pn-leaf-off 0.6s cubic-bezier(0.2, 0.7, 0.3, 1) reverse both;
+}
+html.pn-turn.pn-back::view-transition-old(root) {
+  z-index: 1;
+  animation: pn-under 0.6s cubic-bezier(0.3, 0, 0.2, 1) reverse both;
+}
+@keyframes pn-leaf-off {
+  0% {
+    transform: rotateY(0deg);
+    filter: brightness(1);
+  }
+  100% {
+    transform: rotateY(-88deg);
+    filter: brightness(0.7);
+  }
+}
+@keyframes pn-under {
+  0% {
+    transform: translateX(-2%) scale(0.97);
+    filter: brightness(0.6);
+  }
+  100% {
+    transform: none;
+    filter: brightness(1);
+  }
+}
+
+/* ---------- corner peel (leaving the page) ---------- */
+.pn-curl {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  pointer-events: none;
+}
+.pn-curl-under {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle, var(--field) 1.5px, transparent 2px) 0 0 / 10px 10px,
+    var(--field-deep);
+  clip-path: polygon(100% 100%, 100% 100%, 100% 100%);
+}
+.pn-curl-edge {
+  position: absolute;
+  inset: 0;
+  filter: drop-shadow(3px 0 0 var(--ink)) drop-shadow(-3px 0 0 var(--ink)) drop-shadow(0 3px 0 var(--ink))
+    drop-shadow(0 -3px 0 var(--ink));
+}
+.pn-curl-flap {
+  position: absolute;
+  inset: 0;
+  background: var(--page);
+  clip-path: polygon(100% 100%, 100% 100%, 100% 100%);
+}
+
+/* ---------- palette open: the page behind stays put ---------- */
+html:has(.pn-dialog[open]) {
+  overflow: hidden;
+}

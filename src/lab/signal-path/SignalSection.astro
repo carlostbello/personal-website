@@ -1,0 +1,335 @@
+---
+// The signal path feature panel: guitar -> drive -> echo -> amp.
+// With WebGL and full motion it becomes a live 3D scene (see main.ts);
+// otherwise it shows the static ink drawing. Drop it inside a `.wrap`.
+import SignalPath from '../../components/drawings/SignalPath.astro';
+import { home } from '../../lib/copy';
+
+interface Spot {
+  label: string;
+  say: string;
+  hint: string;
+  hintOn?: string;
+}
+
+interface Props {
+  caption?: string;
+  line?: string;
+  hint?: string;
+  soundOn?: string;
+  soundOff?: string;
+  gear?: Partial<Record<'guitar' | 'drive' | 'echo' | 'amp', Partial<Spot>>>;
+  class?: string;
+}
+
+const signal = home.lab.panels.find((p) => p.caption === 'The signal path');
+
+const defaults: Record<'guitar' | 'drive' | 'echo' | 'amp', Spot> = {
+  guitar: { label: 'Guitar. Click to strum; keys 1 to 6 pick one string.', say: 'TK The guitar I grab first.', hint: 'Click to strum, or drag across.' },
+  drive: { label: 'Drive pedal', say: 'Drive. Makes it dirty.', hint: 'Click to stomp it on.', hintOn: 'On. Strum again.' },
+  echo: { label: 'Echo pedal', say: 'Echo. Says it again.', hint: 'Click to stomp it on.', hintOn: 'On. Strum again.' },
+  amp: { label: 'Amp', say: 'TK The amp.', hint: 'Where it all comes out.' },
+};
+
+const {
+  caption = signal?.caption ?? 'The signal path',
+  line = signal?.line ?? '',
+  hint = 'Pluck the strings. Stomp a pedal.',
+  soundOn = 'Sound on',
+  soundOff = 'Sound off',
+  gear = {},
+  class: className,
+} = Astro.props;
+
+const g = {
+  guitar: { ...defaults.guitar, ...gear.guitar },
+  drive: { ...defaults.drive, ...gear.drive },
+  echo: { ...defaults.echo, ...gear.echo },
+  amp: { ...defaults.amp, ...gear.amp },
+};
+---
+<figure class:list={['panel', 'sigpath', className]} data-sigpath>
+  <span class="caption">{caption}</span>
+  <div class="sigpath-stage" data-sigpath-stage>
+    <div class="sigpath-fallback"><SignalPath /></div>
+    <div class="sigpath-overlay" data-sigpath-overlay>
+      <button type="button" class="sigpath-spot" data-sigpath-spot="guitar" data-sigpath-say={g.guitar.say} data-sigpath-hint={g.guitar.hint} aria-label={g.guitar.label}></button>
+      <button type="button" class="sigpath-spot" data-sigpath-spot="drive" data-sigpath-say={g.drive.say} data-sigpath-hint={g.drive.hint} data-sigpath-hint-on={g.drive.hintOn} aria-pressed="false" aria-label={g.drive.label}></button>
+      <button type="button" class="sigpath-spot" data-sigpath-spot="echo" data-sigpath-say={g.echo.say} data-sigpath-hint={g.echo.hint} data-sigpath-hint-on={g.echo.hintOn} aria-pressed="false" aria-label={g.echo.label}></button>
+      <button type="button" class="sigpath-spot" data-sigpath-spot="amp" data-sigpath-say={g.amp.say} data-sigpath-hint={g.amp.hint} aria-label={g.amp.label}></button>
+      <div class="balloon sigpath-balloon" data-tail="left" data-sigpath-balloon hidden aria-live="polite">
+        <span data-sigpath-say></span>
+        <small data-sigpath-hint></small>
+      </div>
+    </div>
+  </div>
+  <figcaption class="sigpath-foot">
+    {line && <p class="sigpath-line">{line}</p>}
+    <p class="sigpath-hint">{hint}</p>
+    <button type="button" class="sigpath-mute" data-sigpath-mute aria-pressed="false" data-on={soundOn} data-off={soundOff}>
+      <svg viewBox="0 0 32 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
+        <path d="M3 9h5l7-6v18l-7-6H3z" />
+        <path class="sigpath-wave" d="M20 8c2 2 2 6 0 8M24 5c4 4 4 10 0 14" />
+        <path class="sigpath-cross" d="M20 8l8 8M28 8l-8 8" />
+      </svg>
+      <span data-sigpath-label>{soundOn}</span>
+    </button>
+  </figcaption>
+</figure>
+
+<script>
+  import './main';
+</script>
+
+<style>
+  .sigpath {
+    --sigpath-stage-h: min(clamp(340px, 46vw, 580px), 68vh);
+    margin: 0;
+    padding: 0;
+  }
+  .sigpath-stage {
+    position: relative;
+    overflow: hidden;
+    padding: 64px clamp(20px, 6vw, 80px) 24px;
+  }
+  .sigpath-fallback :global(svg) {
+    width: 100%;
+    max-width: 640px;
+    max-height: 340px;
+    margin-inline: auto;
+  }
+  .sigpath-overlay {
+    display: none;
+  }
+  .sigpath-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 22px;
+    padding: 14px clamp(16px, 3vw, 28px);
+    border-top: var(--line) solid var(--ink);
+  }
+  .sigpath-foot p {
+    margin: 0;
+  }
+  .sigpath-line {
+    font-weight: 700;
+  }
+  .sigpath-hint,
+  .sigpath-mute {
+    display: none;
+  }
+
+  /* Live: a fixed-height stage that the scene fills edge to edge. */
+  .sigpath-live .sigpath-stage {
+    height: var(--sigpath-stage-h);
+    padding: 0;
+  }
+  .sigpath-live .sigpath-hint {
+    display: block;
+    font-family: var(--f-hand);
+    font-size: 1.2rem;
+    line-height: 1.1;
+    color: var(--ink-soft);
+  }
+  .sigpath-live .sigpath-fallback {
+    position: absolute;
+    inset: 15% 12%;
+    display: grid;
+    place-items: center;
+    transition: opacity 0.3s;
+  }
+  .sigpath-ready .sigpath-fallback {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .sigpath-ready .sigpath-overlay {
+    display: block;
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .sigpath-stage :global(.sigpath-canvas) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    touch-action: pan-y;
+  }
+
+  /* Hotspots: small marigold studs pinned to the gear. */
+  .sigpath-spot {
+    position: absolute;
+    left: -13px;
+    top: -13px;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: var(--line) solid var(--ink);
+    border-radius: 50%;
+    background: var(--accent);
+    pointer-events: auto;
+    cursor: pointer;
+    will-change: transform;
+  }
+  .sigpath-spot::after {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border-radius: 50%;
+    background: var(--ink);
+    transform: scale(0.45);
+    transition: transform 0.2s var(--pop);
+  }
+  .sigpath-spot:hover::after,
+  .sigpath-spot:focus-visible::after {
+    transform: scale(0.8);
+  }
+  .sigpath-spot[aria-pressed='true'] {
+    background: var(--page);
+  }
+  .sigpath-spot[aria-pressed='true']::after {
+    background: var(--accent);
+    box-shadow: 0 0 0 2px var(--ink);
+    transform: scale(0.8);
+  }
+  .sigpath-spot:focus-visible {
+    outline: 3px solid var(--ink);
+    outline-offset: 3px;
+  }
+  /* Off-screen studs stay in the tab order; they appear when focused. */
+  .sigpath-spot:global(.sigpath-off):not(:focus-visible) {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .sigpath-balloon {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: max-content;
+    max-width: min(260px, 70%);
+    padding: 12px 22px 14px;
+    font-size: 1.25rem;
+    pointer-events: none;
+    z-index: 3;
+  }
+  .sigpath-balloon[hidden] {
+    display: none;
+  }
+  .sigpath-balloon::after {
+    left: var(--sigpath-tail, 24%);
+  }
+  .sigpath-balloon small {
+    display: block;
+    font-size: 1rem;
+    color: var(--ink-soft);
+  }
+  .sigpath-balloon:global(.sigpath-pop) {
+    animation: sigpath-pop 0.3s var(--pop);
+  }
+  @keyframes sigpath-pop {
+    from {
+      opacity: 0;
+      scale: 0.6;
+    }
+  }
+
+  /* Sound effects: a white burst with lettering, stamped and gone. */
+  .sigpath-overlay :global(.sigpath-sfx) {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: calc(170px * var(--sigpath-s, 1));
+    height: calc(120px * var(--sigpath-s, 1));
+    translate: -50% -50%;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+    z-index: 2;
+    animation: sigpath-stamp 0.85s var(--snap) both;
+  }
+  .sigpath-overlay :global(.sigpath-sfx svg) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .sigpath-overlay :global(.sigpath-sfx .lettering) {
+    position: relative;
+    font-size: calc(2rem * var(--sigpath-s, 1));
+    rotate: var(--sigpath-r, -6deg);
+  }
+  @keyframes sigpath-stamp {
+    0% {
+      scale: 1.6;
+      opacity: 0;
+    }
+    18% {
+      scale: 0.94;
+      opacity: 1;
+    }
+    30% {
+      scale: 1;
+    }
+    75% {
+      opacity: 1;
+    }
+    100% {
+      scale: 1.04;
+      opacity: 0;
+    }
+  }
+
+  .sigpath-mute {
+    margin-left: auto;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 14px 4px 10px;
+    border: var(--line) solid var(--ink);
+    border-radius: 999px;
+    background: var(--page);
+    color: var(--ink);
+    font-family: var(--f-hand);
+    font-size: 1.15rem;
+    line-height: 1.2;
+    cursor: pointer;
+  }
+  .sigpath-live .sigpath-mute {
+    display: inline-flex;
+  }
+  .sigpath-mute svg {
+    width: 26px;
+    height: 20px;
+  }
+  .sigpath-cross {
+    display: none;
+  }
+  .sigpath-mute[aria-pressed='true'] .sigpath-wave {
+    display: none;
+  }
+  .sigpath-mute[aria-pressed='true'] .sigpath-cross {
+    display: inline;
+  }
+  .sigpath-mute:hover {
+    background: var(--accent);
+  }
+  .sigpath-mute:focus-visible {
+    outline: 3px solid var(--ink);
+    outline-offset: 3px;
+  }
+
+  @media (max-width: 820px) {
+    .sigpath {
+      --sigpath-stage-h: min(88vw, 58vh, 520px);
+    }
+    .sigpath-foot {
+      gap: 4px 14px;
+    }
+    .sigpath-balloon {
+      font-size: 1.1rem;
+      padding: 10px 18px 12px;
+    }
+  }
+</style>

@@ -1,27 +1,87 @@
 ---
-// The homepage's own table of contents: five small comic panels, each a
-// tiny inked vignette. Same-page jumps turn the page with a View
-// Transition; Talks peels the corner before leaving; Search opens the
-// balloon palette. Without JS every panel is a plain link.
-const panels = [
-  { key: 'home', label: 'Home', href: '#top' },
-  { key: 'projects', label: 'Projects', href: '#projects' },
-  { key: 'log', label: 'Log', href: '#log' },
-  { key: 'talks', label: 'Talks', href: '/talks' },
-  { key: 'search', label: 'Search', href: '/search' },
+/*
+  PanelIndex: a table of contents drawn as a tier of small comic panels,
+  each a tiny inked vignette. Hash links on this page turn the page with a
+  View Transition; links to other pages peel the corner before leaving;
+  a `palette` item opens the balloon palette (needs <Palette /> on the
+  page, else it is a plain link to its href). The strip highlights the
+  panel whose section is in the middle of the screen. Without JS every
+  panel is a plain link.
+
+  Props:
+  - items   PanelItem[] (default: Home #top, Projects #projects, Log #log,
+            Talks /talks, Search -> palette). Each item:
+              label    Visible label.
+              href     Where it goes: '#id' on this page, or a path.
+              art      Vignette: 'home' | 'projects' | 'log' | 'talks' | 'search'
+                       (defaults from the label, else 'home').
+              track    Selector of the section on this page this panel stands
+                       for, for the "you are here" highlight. Defaults to href
+                       when href is a hash. '#top' with no such element means
+                       the top of the page down to the end of this strip.
+              palette  true: opens the palette (href stays the no-JS fallback).
+  - label   aria-label for the <nav> (default 'On this page').
+  - class   Extra classes on the <nav> (it also carries .wrap).
+
+  Usage:
+    import PanelIndex from '../../lab/panel-nav/PanelIndex.astro';
+    <PanelIndex items={[
+      { label: 'Home', href: '#top' },
+      { label: 'Projects', href: '#projects' },
+      { label: 'Log', href: '#log' },
+      { label: 'Talks', href: '/talks' },
+      { label: 'Search', href: '/search', palette: true },
+    ]} />
+*/
+import './turns.css';
+
+type Art = 'home' | 'projects' | 'log' | 'talks' | 'search';
+export interface PanelItem {
+  label: string;
+  href: string;
+  art?: Art;
+  track?: string;
+  palette?: boolean;
+}
+interface Props {
+  items?: PanelItem[];
+  label?: string;
+  class?: string;
+}
+
+const defaults: PanelItem[] = [
+  { label: 'Home', href: '#top' },
+  { label: 'Projects', href: '#projects' },
+  { label: 'Log', href: '#log' },
+  { label: 'Talks', href: '/talks' },
+  { label: 'Search', href: '/search', palette: true },
 ];
+const { items = defaults, label = 'On this page', class: className } = Astro.props;
+const arts: Art[] = ['home', 'projects', 'log', 'talks', 'search'];
+const guess = (l: string): Art => arts.find((a) => l.toLowerCase().includes(a)) ?? 'home';
+const panels = items.map((it) => ({
+  ...it,
+  key: it.art ?? guess(it.label),
+  track: it.track ?? (it.href.startsWith('#') ? it.href : undefined),
+}));
+// Uneven widths, like a real comic tier.
+const widths = [1, 1.25, 1, 1.1, 1.2];
+const firstTracked = panels.findIndex((p) => p.track);
+const cols = panels.map((_, i) => `${widths[i % widths.length]}fr`).join(' ');
 ---
-<nav class="pn-index wrap" aria-label="On this page" data-pn-index>
-  <p class="caption pn-page" aria-hidden="true">Page <b data-pn-num>1</b> of 5</p>
+<nav class:list={['pn-index', 'wrap', className]} aria-label={label} data-pn-index style={`--pn-cols:${cols};--pn-count:${panels.length}`}>
+  <p class="caption pn-page" aria-hidden="true">Page <b data-pn-num>1</b> of {panels.length}</p>
   <ol class="pn-strip">
     {panels.map((p, i) => (
       <li style={`--n:${i}`}>
         <a
           class:list={['pn-thumb', `pn-${p.key}`]}
           href={p.href}
-          data-pn-go={p.key}
+          data-pn-go={p.palette ? undefined : ''}
+          data-pn-open-palette={p.palette ? '' : undefined}
+          data-pn-track={p.track}
           data-pn-n={i + 1}
-          aria-current={i === 0 ? 'page' : undefined}
+          aria-current={i === firstTracked ? 'page' : undefined}
         >
           <span class="pn-no" aria-hidden="true">{i + 1}</span>
           {p.key === 'home' && (
@@ -95,7 +155,7 @@ const panels = [
           )}
           <span class="pn-label">
             {p.label}
-            {p.key === 'search' && <kbd class="pn-kbd" data-pn-kbd hidden>Ctrl K</kbd>}
+            {p.palette && <kbd class="pn-kbd" data-pn-kbd hidden>Ctrl K</kbd>}
           </span>
         </a>
       </li>
@@ -136,7 +196,7 @@ const panels = [
     padding: 0;
     display: grid;
     /* Uneven widths, like a real comic tier. */
-    grid-template-columns: 1fr 1.25fr 1fr 1.1fr 1.2fr;
+    grid-template-columns: var(--pn-cols);
     gap: var(--gutter);
   }
   .pn-thumb {
@@ -227,7 +287,7 @@ const panels = [
 
   @media (max-width: 720px) {
     .pn-strip {
-      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-template-columns: repeat(var(--pn-count), minmax(0, 1fr));
       gap: 7px;
     }
     .pn-thumb {
@@ -245,3 +305,7 @@ const panels = [
     }
   }
 </style>
+
+<script>
+  import './client';
+</script>

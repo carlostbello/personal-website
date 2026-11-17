@@ -14,7 +14,11 @@ export interface Palette {
 
 export function readPalette(): Palette {
   const css = getComputedStyle(document.documentElement);
-  const get = (name: string, fallback: string) => new THREE.Color(css.getPropertyValue(name).trim() || fallback);
+  // Parsed as-is (no sRGB to linear conversion) so the flat fills match
+  // the CSS tokens exactly, without touching three's global color
+  // management that other scenes on the page may rely on.
+  const get = (name: string, fallback: string) =>
+    new THREE.Color().setStyle(css.getPropertyValue(name).trim() || fallback, THREE.LinearSRGBColorSpace);
   return {
     field: get('--field', '#3b5a8c'),
     fieldDeep: get('--field-deep', '#2b4470'),
@@ -223,6 +227,36 @@ export function stringMaterial(ink: THREE.Color): THREE.ShaderMaterial {
     fragmentShader: /* glsl */ `
       uniform vec3 uInk;
       void main() { gl_FragColor = vec4(uInk, 1.0); }
+    `,
+  });
+}
+
+/** Grille cloth: white with a fine blue basket weave. */
+export function grilleMaterial(p: Palette, w: number, h: number): THREE.ShaderMaterial {
+  return new THREE.ShaderMaterial({
+    uniforms: { uPage: { value: p.page }, uWeave: { value: p.field }, uSize: { value: new THREE.Vector2(w, h) } },
+    vertexShader: /* glsl */ `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform vec3 uPage;
+      uniform vec3 uWeave;
+      uniform vec2 uSize;
+      varying vec2 vUv;
+      float line(float v) {
+        float f = abs(fract(v) - 0.5);
+        float aa = fwidth(v) * 0.9;
+        return 1.0 - smoothstep(0.08 - aa, 0.08 + aa, f);
+      }
+      void main() {
+        vec2 p = vUv * uSize * 7.0;
+        float m = max(line(p.x + p.y), line(p.x - p.y)) * 0.85;
+        gl_FragColor = vec4(mix(uPage, uWeave, m), 1.0);
+      }
     `,
   });
 }

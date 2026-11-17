@@ -1,9 +1,9 @@
 // Production passes for the avatar, drawn by one fragment shader.
-// A single `progress` uniform runs 0 -> 4 through the comic pipeline:
+// A single `progress` uniform runs 0 -> 3 through the comic pipeline:
 //   0..1 pencils  (sobel edges, jittered, non-photo blue, grainy)
 //   1..2 inks     (dark areas brushed in top to bottom)
-//   2..3 flats    (colour plates bucket-fill and slide into register; pencils erased)
-//   3..4 print    (Ben-Day dots grow in the cast shadows)
+//   2..3 colors   (colour plates bucket-fill and slide into register; pencils
+//                  erased; lands on the exact original art at 3)
 // A lens uniform shows the pencils underneath the finished art.
 
 const VERT = `
@@ -91,22 +91,7 @@ void main() {
   col = vec4(u_ink, 1.0) * ia + col * (1.0 - ia);
 
   // Settle onto the exact original art.
-  col = mix(col, vec4(c.rgb * c.a, c.a), smoothstep(3.0, 3.5, p));
-
-  // 4. print: Ben-Day dots in the shadows the hair and chin cast on skin.
-  float k = smoothstep(3.0, 4.0, p);
-  if (k > 0.0) {
-    float skin = c.a * step(0.55, l) * smoothstep(0.08, 0.18, c.r - c.b);
-    vec4 oc = texture2D(u_tex, uv + vec2(-0.016, 0.028));
-    float occ = oc.a * (1.0 - smoothstep(0.2, 0.42, dot(oc.rgb, LW)));
-    float cell = 6.5 * u_dpr;
-    vec2 q = mat2(0.7071, -0.7071, 0.7071, 0.7071) * gl_FragCoord.xy / cell;
-    float d = length(fract(q) - 0.5);
-    float r = 0.38 * k;
-    float dots = (1.0 - smoothstep(r - 0.07, r + 0.05, d)) * smoothstep(0.0, 0.15, k);
-    vec3 shade = c.rgb * vec3(0.86, 0.72, 0.64);
-    col.rgb = mix(col.rgb, shade * col.a, skin * occ * dots);
-  }
+  col = mix(col, vec4(c.rgb * c.a, c.a), smoothstep(2.75, 3.0, p));
 
   // Lens: a window down to the pencils on the board.
   if (u_lensA > 0.0) {

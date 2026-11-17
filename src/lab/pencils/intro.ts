@@ -1,18 +1,18 @@
-// The hero is drawn in production passes on first load: pencils, inks,
-// flats, print. DOM elements follow `data-stage` on the hero (CSS in the
-// page); the avatar follows a continuous progress value in a shader.
-// Afterwards the caption box becomes a tag to flip between passes.
+// The hero is drawn in production passes on first visit: pencils, inks,
+// colors. DOM elements follow `data-pencils-stage` on the hero (CSS in
+// PencilsHero.astro); the avatar follows a continuous progress value in a
+// shader. Afterwards the caption box becomes a tag to flip between passes.
 
 import { createPasses, type Passes } from './passes';
 
 const KEY = 'lab-pencils-seen';
-const NAMES = ['Pencils', 'Inks', 'Flats', 'Print'];
+const NAMES = ['Pencils', 'Inks', 'Colors'];
+const LAST = NAMES.length;
 // [duration of the pass, pause after it] in ms
 const TIMING: Array<[number, number]> = [
   [1300, 250],
   [1100, 200],
-  [950, 150],
-  [850, 600],
+  [1000, 0],
 ];
 
 let cleanups: Array<() => void> = [];
@@ -35,31 +35,38 @@ const markSeen = () => {
 
 const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
 
-async function setup() {
-  const hero = document.querySelector<HTMLElement>('[data-pencils]');
-  if (!hero) return;
-  const art = hero.querySelector<HTMLElement>('.art')!;
-  const canvas = hero.querySelector<HTMLCanvasElement>('canvas.passes')!;
-  const tag = hero.querySelector<HTMLElement>('[data-tag]')!;
-  const now = tag.querySelector<HTMLElement>('[data-now]')!;
-  const skipBtn = tag.querySelector<HTMLButtonElement>('[data-skip]')!;
-  const passBtns = [...tag.querySelectorAll<HTMLButtonElement>('[data-pass]')];
-  const hint = hero.querySelector<HTMLElement>('[data-hint]');
+async function setup(hero: HTMLElement) {
+  const who = hero.querySelector<HTMLElement>('.who');
+  const art = hero.querySelector<HTMLElement>('.art');
+  const canvas = hero.querySelector<HTMLCanvasElement>('canvas.passes');
+  const tag = hero.querySelector<HTMLElement>('[data-pencils-tag]');
+  const now = tag?.querySelector<HTMLElement>('[data-pencils-now]');
+  const skipBtn = tag?.querySelector<HTMLButtonElement>('[data-pencils-skip]');
+  if (!who || !art || !canvas || !tag || !now || !skipBtn) return;
+  const passBtns = [...tag.querySelectorAll<HTMLButtonElement>('[data-pencils-pass]')];
+  const hint = hero.querySelector<HTMLElement>('[data-pencils-hint]');
 
   const play = !seen() && !reduced();
   let alive = true;
-  let p = play ? 0 : 4;
+  let p = play ? 0 : LAST;
   let passes: Passes | null = null;
   let tweenRaf = 0;
+  let lensOn = false;
+  let artTimer = 0;
 
-  hero.dataset.intro = play ? 'play' : 'skip';
-  if (play) hero.dataset.stage = '0';
+  hero.dataset.pencilsIntro = play ? 'play' : 'skip';
+  if (play) hero.dataset.pencilsStage = '0';
   tag.hidden = false;
   tag.dataset.mode = 'intro';
+
+  // When he is finished and the lens is off, show the real <img> rather
+  // than the canvas, so the end frame is exactly the homepage hero.
+  const syncArt = () => who.classList.toggle('pencils-art', p >= LAST && !lensOn);
 
   const setP = (v: number) => {
     p = v;
     passes?.set(v);
+    syncArt();
   };
 
   /** Animate the shader progress; resolves when done or cancelled. */
@@ -85,7 +92,7 @@ async function setup() {
   const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
   const label = (i: number) => {
-    now.textContent = `${NAMES[i]} — ${i + 1} of 4`;
+    now.textContent = `${NAMES[i]} — ${i + 1} of ${LAST}`;
     now.classList.remove('pop');
     void now.offsetWidth;
     now.classList.add('pop');
@@ -100,10 +107,10 @@ async function setup() {
   let skipped = false;
   const finish = () => {
     cancelAnimationFrame(tweenRaf);
-    setP(4);
-    hero.dataset.stage = '4';
-    hero.dataset.intro = 'played';
-    showControls(4);
+    setP(LAST);
+    hero.dataset.pencilsStage = String(LAST);
+    hero.dataset.pencilsIntro = 'played';
+    showControls(LAST);
   };
   const skip = () => {
     if (skipped) return;
@@ -120,25 +127,38 @@ async function setup() {
   passBtns.forEach((b, i) =>
     b.addEventListener('click', () => {
       const stage = i + 1;
-      hero.dataset.stage = String(stage);
+      hero.dataset.pencilsStage = String(stage);
+      hero.dataset.pencilsIntro = 'played';
       passBtns.forEach((o, j) => o.setAttribute('aria-pressed', String(j === i)));
       tween(stage, Math.min(1400, Math.abs(stage - p) * 600));
     }),
   );
 
-  // Lens: hover the finished avatar to see his pencils underneath.
+  // Lens: hover the avatar to see his pencils underneath.
   const onMove = (e: PointerEvent) => {
     if (!passes || tag.dataset.mode !== 'controls' || e.pointerType !== 'mouse') return;
+    clearTimeout(artTimer);
+    lensOn = true;
+    syncArt();
     const r = canvas.getBoundingClientRect();
     passes.lens(((e.clientX - r.left) / r.width) * canvas.clientWidth, ((e.clientY - r.top) / r.height) * canvas.clientHeight);
   };
-  const onLeave = () => passes?.lensOff();
+  const onLeave = () => {
+    passes?.lensOff();
+    clearTimeout(artTimer);
+    // let the lens ease out on the canvas before handing back to the <img>
+    artTimer = window.setTimeout(() => {
+      lensOn = false;
+      syncArt();
+    }, 350);
+  };
   art.addEventListener('pointermove', onMove);
   art.addEventListener('pointerleave', onLeave);
 
   cleanups.push(() => {
     alive = false;
     cancelAnimationFrame(tweenRaf);
+    clearTimeout(artTimer);
     document.removeEventListener('keydown', onKey);
     art.removeEventListener('pointermove', onMove);
     art.removeEventListener('pointerleave', onLeave);
@@ -154,22 +174,23 @@ async function setup() {
     passes = ps;
     if (ps) {
       ps.set(p);
-      hero.querySelector('.who')?.classList.add('gl');
+      syncArt();
+      who.classList.add('gl');
     }
   });
 
   if (!play) {
     await ready;
-    if (alive) showControls(4);
+    if (alive) showControls(LAST);
     return;
   }
 
   markSeen();
   // Give the texture a moment so the avatar passes line up with the DOM.
   await Promise.race([ready, wait(600)]);
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < LAST; i++) {
     if (!alive || skipped) return;
-    hero.dataset.stage = String(i + 1);
+    hero.dataset.pencilsStage = String(i + 1);
     label(i);
     await tween(i + 1, TIMING[i][0]);
     if (!alive || skipped) return;
@@ -178,31 +199,9 @@ async function setup() {
   if (alive && !skipped) finish();
 }
 
-/** The rest of the page: panel borders ink over a pencil rough as they arrive. */
-function inkPanels() {
-  if (reduced()) return;
-  const panels = [...document.querySelectorAll<HTMLElement>('[data-say] .panel')];
-  const io = new IntersectionObserver(
-    (entries) => {
-      for (const e of entries) {
-        if (!e.isIntersecting) continue;
-        e.target.classList.add('drawn');
-        io.unobserve(e.target);
-      }
-    },
-    { threshold: 0.2 },
-  );
-  panels.forEach((p) => {
-    p.dataset.rough = '';
-    io.observe(p);
-  });
-  cleanups.push(() => io.disconnect());
-}
-
 document.addEventListener('astro:page-load', () => {
-  if (!document.querySelector('[data-pencils]')) return;
-  setup();
-  inkPanels();
+  const hero = document.querySelector<HTMLElement>('[data-pencils-hero]');
+  if (hero) setup(hero);
 });
 
 document.addEventListener('astro:before-swap', () => {

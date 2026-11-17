@@ -7,7 +7,7 @@
 // deformation, computed on the CPU with a mirror of the vertex math.
 
 import * as THREE from 'three';
-import { drawBurst, drawDiagram, drawPacket, layoutFor, type Layout, type Palette, type Pt } from './diagram';
+import { defaultLabels, drawBurst, drawDiagram, drawPacket, layoutFor, type Labels, type Layout, type Palette, type Pt } from './diagram';
 
 const vert = /* glsl */ `
 uniform float uProgress;
@@ -155,10 +155,25 @@ async function fontsReady() {
   await Promise.race([load, new Promise((r) => setTimeout(r, 1800))]);
 }
 
-/** Mount the sheet into `stage`. Returns a cleanup function. */
+function readLabels(stage: HTMLElement): Labels {
+  try {
+    const raw = JSON.parse(stage.dataset.agLabels ?? '{}');
+    return { ...defaultLabels, ...raw };
+  } catch {
+    return defaultLabels;
+  }
+}
+
+/**
+ * Mount the sheet into `stage` (the [data-ag-sheet] element). Canvas labels
+ * come from its data-ag-labels JSON, the accessible description from
+ * data-ag-alt, and the send button is the [data-ag-send] next to it.
+ * Returns a cleanup function.
+ */
 export async function mountAirGap(stage: HTMLElement): Promise<() => void> {
   const canvas = stage.querySelector<HTMLCanvasElement>('canvas')!;
-  const sendBtn = stage.parentElement?.querySelector<HTMLButtonElement>('[data-send]') ?? null;
+  const sendBtn = stage.parentElement?.querySelector<HTMLButtonElement>('[data-ag-send]') ?? null;
+  const labels = readLabels(stage);
   const tallQuery = matchMedia('(max-width: 640px)');
   const fine = matchMedia('(pointer: fine)').matches;
 
@@ -166,7 +181,7 @@ export async function mountAirGap(stage: HTMLElement): Promise<() => void> {
   try {
     renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'low-power' });
   } catch {
-    stage.classList.add('no-gl');
+    stage.classList.add('ag-no-gl');
     return () => {};
   }
   await fontsReady();
@@ -211,7 +226,7 @@ export async function mountAirGap(stage: HTMLElement): Promise<() => void> {
   drawPacket(packetCanvas, colors);
   const packetTex = new THREE.CanvasTexture(packetCanvas);
   packetTex.colorSpace = THREE.SRGBColorSpace;
-  const words = ['THUNK!', 'BLOCKED!'];
+  const words = [labels.thunk, labels.blocked];
   const burstTex = words.map((w, i) => {
     const c = document.createElement('canvas');
     drawBurst(c, w, colors, 3 + i * 5);
@@ -250,11 +265,11 @@ export async function mountAirGap(stage: HTMLElement): Promise<() => void> {
   let burstW = 1.9;
 
   function applyLayout() {
-    L = layoutFor(tallQuery.matches ? 'tall' : 'wide');
+    L = layoutFor(tallQuery.matches ? 'tall' : 'wide', labels);
     const tall = L.kind === 'tall';
     Wp = tall ? 6 : 12;
     Hp = (Wp * L.h) / L.w;
-    drawDiagram(paperCanvas, L, colors, tall ? 2 : 2);
+    drawDiagram(paperCanvas, L, colors, 2, labels);
     paperTex.dispose();
     paperTex.image = paperCanvas;
     paperTex.needsUpdate = true;
@@ -266,7 +281,7 @@ export async function mountAirGap(stage: HTMLElement): Promise<() => void> {
     paperGeo = tall ? new THREE.PlaneGeometry(Wp, Hp, 40, along) : new THREE.PlaneGeometry(Wp, Hp, along, 32);
     paper.geometry = paperGeo;
     packetSize = tall ? 0.42 : 0.36;
-    burstW = tall ? 2.6 : 2.35;
+    burstW = tall ? 2.2 : 2.1;
     segs = [];
     loopLen = 0;
     for (let i = 0; i < L.loop.length; i++) {
@@ -371,12 +386,24 @@ export async function mountAirGap(stage: HTMLElement): Promise<() => void> {
     b.t = 0;
     b.rot = (Math.random() - 0.5) * 0.25;
     (b.mesh.material as THREE.MeshBasicMaterial).map = burstTex[burstWord++ % 2];
-    // Sit the burst on the outside of the gap, kept on the paper.
+    // Sit the burst on the outside of the gap, kept on the paper. `reach`
+    // is how far its spikes get from the centre at the peak of the pop
+    // (overshoot x jiggle), so the burst never covers the AIR GAP lettering.
+    // On phones it goes to the corner nearest the hit, clear of the
+    // centred "the internet" label.
     const bw = (burstW * L.w) / Wp;
     const bh = bw * (340 / 560);
+    const reach = 0.57;
+    const edge = 14;
     const at = tall
-      ? { x: Math.min(L.w - bw / 2, Math.max(bw / 2, hit.x + (Math.random() - 0.5) * 60)), y: L.gap.from - bh * 0.32 }
-      : { x: L.gap.from - bw * 0.47, y: Math.min(L.h - bh / 2, Math.max(bh / 2, hit.y - 30)) };
+      ? {
+          x: hit.x < L.w / 2 ? edge + bw * reach : L.w - edge - bw * reach,
+          y: L.gap.from - 10 - bh * reach,
+        }
+      : {
+          x: L.gap.from - 8 - bw * reach,
+          y: hit.y < L.h / 2 ? Math.max(edge + bh * reach, hit.y - 30) : L.h - edge - bh * reach,
+        };
     b.mesh.userData.at = at;
     b.mesh.visible = true;
   }
@@ -583,11 +610,12 @@ export async function mountAirGap(stage: HTMLElement): Promise<() => void> {
 
   applyLayout();
   progress = scrollTarget() > 0.99 ? 1 : 0;
-  stage.classList.add('live');
+  stage.classList.add('ag-live');
   canvas.setAttribute('role', 'img');
   canvas.setAttribute(
     'aria-label',
-    'Documents, an index, a model and servers inside a closed network. Packets that try to reach the internet bounce off the air gap.',
+    stage.dataset.agAlt ||
+      'Documents, an index, a model and servers inside a closed network. Packets that try to reach the internet bounce off the air gap.',
   );
   canvas.removeAttribute('aria-hidden');
 
@@ -611,6 +639,8 @@ export async function mountAirGap(stage: HTMLElement): Promise<() => void> {
   void fine;
 
   return () => {
+    if (sendBtn) sendBtn.hidden = true;
+    stage.classList.remove('ag-live');
     setRunning(false);
     running = false;
     io.disconnect();

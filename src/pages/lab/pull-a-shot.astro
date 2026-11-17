@@ -5,22 +5,18 @@ import Base from '../../layouts/Base.astro';
 import Narrator from '../../components/Narrator.astro';
 import AirGap from '../../components/drawings/AirGap.astro';
 import Rack from '../../components/drawings/Rack.astro';
+import Espresso from '../../components/drawings/Espresso.astro';
 import SignalPath from '../../components/drawings/SignalPath.astro';
 import avatar from '../../assets/avatar.png';
 import { home } from '../../lib/copy';
 import { getPosts } from '../../lib/posts';
 import PostList from '../../components/PostList.astro';
-import Rig from '../../lab/pull-a-shot/Rig.astro';
+import ShotSection from '../../lab/pull-a-shot/ShotSection.astro';
 
 const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order).slice(0, 3);
 const posts = (await getPosts()).slice(0, 3);
 
-// The espresso rig gets its own big interactive panel; the other two
-// after-hours panels stay as a comic strip underneath it.
-const strip = [
-  { ...home.lab.panels[0], Drawing: Rack },
-  { ...home.lab.panels[2], Drawing: SignalPath },
-];
+const drawings = [Rack, Espresso, SignalPath];
 
 ---
 <Base title="Lab: Pull a shot" noindex>
@@ -50,15 +46,17 @@ const strip = [
 
   <section class="lab wrap" data-say={home.narrator.lab}>
     <h2 class="lettering section-head">{home.lab.heading}</h2>
-    <Rig />
     <div class="strip">
-      {strip.map(({ Drawing, ...p }) => (
-        <a class="panel strip-panel" href={p.href}>
-          <span class="caption">{p.caption}</span>
-          <Drawing />
-          <p>{p.line}</p>
-        </a>
-      ))}
+      {home.lab.panels.map((p, i) => {
+        const Drawing = drawings[i];
+        return (
+          <a class="panel strip-panel" href={p.href}>
+            <span class="caption">{p.caption}</span>
+            <Drawing />
+            <p>{p.line}</p>
+          </a>
+        );
+      })}
     </div>
   </section>
 
@@ -82,8 +80,29 @@ const strip = [
     <a class="more on-field" href="/log">{home.log.all}</a>
   </section>
 
+  <!-- On the final page this sits after the homelab section, last before the footer. -->
+  <ShotSection class="wrap" say="Go on, pull one. Let go in the yellow." />
+
   <Narrator quips={home.quips} />
 </Base>
+
+<script>
+  // Stand-in for the final page's wiring: the shot section asks the corner
+  // narrator to react through 'narrator:say'. Only claim the line (and so
+  // suppress the section's own balloon) when the narrator is on screen.
+  const onSay = (e: Event) => {
+    const nar = document.querySelector<HTMLElement>('[data-narrator]');
+    const line = nar?.querySelector<HTMLElement>('[data-line]');
+    if (!nar || !line || !nar.hasAttribute('data-on') || getComputedStyle(nar).display === 'none') return;
+    line.textContent = String((e as CustomEvent).detail);
+    line.classList.remove('pop');
+    void line.offsetWidth;
+    line.classList.add('pop');
+    e.preventDefault();
+  };
+  document.addEventListener('astro:page-load', () => window.addEventListener('narrator:say', onSay));
+  document.addEventListener('astro:before-swap', () => window.removeEventListener('narrator:say', onSay));
+</script>
 
 <style>
   /* ---------- hero ---------- */
@@ -162,7 +181,8 @@ const strip = [
   }
 
   /* ---------- shared ---------- */
-  section + section {
+  section + section,
+  section + :global(.pas-section) {
     margin-top: clamp(64px, 10vw, 120px);
   }
   .section-head {
@@ -194,9 +214,8 @@ const strip = [
   /* ---------- lab strip: uneven panels, like a comic row ---------- */
   .strip {
     display: grid;
-    grid-template-columns: 1.4fr 1fr;
+    grid-template-columns: 1.15fr 1.4fr 1fr;
     gap: var(--gutter);
-    margin-top: calc(var(--gutter) * 1.6);
   }
   .strip-panel {
     display: flex;
@@ -209,7 +228,7 @@ const strip = [
   .strip-panel:nth-child(1) {
     transform: rotate(-0.8deg);
   }
-  .strip-panel:nth-child(2) {
+  .strip-panel:nth-child(3) {
     transform: rotate(0.7deg);
     background: var(--accent);
   }

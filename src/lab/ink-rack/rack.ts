@@ -1,16 +1,16 @@
-// Mounts the halftone rack into [data-rack]. Returns a cleanup function.
-// Without WebGL the static ink drawing in the markup stays put.
+// Mounts the halftone homelab into a [data-ink-rack] root. Returns a cleanup
+// function. Without WebGL the static ink drawing in the markup stays put.
 import * as THREE from 'three';
-import { buildRack, normalMaterial, type Server } from './scene';
+import { buildRack, normalMaterial, type DeviceKey, type Server } from './scene';
 import { printMaterial } from './print';
 
-const BASE_YAW = 0.42;
-const BASE_PITCH = 0.06;
+const BASE_YAW = 0.24;
+const BASE_PITCH = 0.02;
 
 export function mountRack(root: HTMLElement): () => void {
-  const stage = root.querySelector<HTMLElement>('[data-stage]');
-  const callout = root.querySelector<HTMLElement>('[data-callout]');
-  const hits = root.querySelector<HTMLElement>('[data-hits]');
+  const stage = root.querySelector<HTMLElement>('[data-ink-rack-stage]');
+  const callout = root.querySelector<HTMLElement>('[data-ink-rack-callout]');
+  const hits = root.querySelector<HTMLElement>('[data-ink-rack-hits]');
   if (!stage || !callout || !hits) return () => {};
 
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -36,13 +36,18 @@ export function mountRack(root: HTMLElement): () => void {
   });
 
   const scene = new THREE.Scene();
-  const { rack, servers, dispose: disposeRack } = buildRack();
+  let labels: Partial<Record<DeviceKey, string>> = {};
+  try {
+    labels = JSON.parse(root.dataset.inkRackLabels || '{}');
+  } catch {
+    // Fall back to the built-in captions.
+  }
+  const { rack, servers, size, centreY, dispose: disposeRack } = buildRack(labels);
   const pivot = new THREE.Group();
   pivot.add(rack);
-  rack.position.set(-0.04, 0, 0);
   scene.add(pivot);
-  const camera = new THREE.PerspectiveCamera(26, 1, 0.1, 50);
-  const target = new THREE.Vector3(0.05, 1.12, 0);
+  const camera = new THREE.PerspectiveCamera(18, 1, 0.1, 160);
+  const target = new THREE.Vector3(0, centreY - size.y * 0.1, 0);
 
   const rtOpts = { depthBuffer: true, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter };
   const rtColor = new THREE.WebGLRenderTarget(1, 1, rtOpts);
@@ -71,14 +76,16 @@ export function mountRack(root: HTMLElement): () => void {
     rtNormal.setSize(w * dpr, h * dpr);
     print.uniforms.uRes.value.set(w * dpr, h * dpr);
     // Smaller panels get a finer screen and thinner pens.
-    cellCss = THREE.MathUtils.clamp(w / 80, 4.6, 6.8);
-    print.uniforms.uLine.value = THREE.MathUtils.clamp(w / 330, 1.1, 1.6) * dpr;
+    cellCss = THREE.MathUtils.clamp(w / 150, 4.4, 6.6);
+    print.uniforms.uLine.value = THREE.MathUtils.clamp(w / 600, 1.0, 1.6) * dpr;
     camera.aspect = w / h;
-    // Fit the rack's height, and back off further on narrow panels.
-    const fitH = 1.5 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
-    const fitW = 1.05 / (Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect);
-    const dist = Math.max(fitH, fitW);
-    camera.position.set(target.x + dist * 0.18, target.y + dist * 0.2, dist);
+    // Fit the whole lineup: its height, or its (turned) width on narrow panels.
+    const tan = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    const halfW = 0.5 * (size.x * Math.cos(BASE_YAW) + size.z * Math.sin(BASE_YAW));
+    const fitH = (size.y * 0.5 * 1.22) / tan;
+    const fitW = (halfW * 1.04) / (tan * camera.aspect);
+    const dist = Math.max(fitH, fitW) + size.z * 0.3;
+    camera.position.set(target.x + dist * 0.05, target.y + dist * 0.13, dist);
     camera.lookAt(target);
     camera.updateProjectionMatrix();
     dirty = true;
@@ -108,7 +115,7 @@ export function mountRack(root: HTMLElement): () => void {
   const buttons = servers.map((s) => {
     const b = document.createElement('button');
     b.type = 'button';
-    b.className = 'hit';
+    b.className = 'ink-rack-hit';
     b.textContent = s.label;
     b.addEventListener('focus', () => setActive(s));
     b.addEventListener('blur', () => !pinned && setActive(null));
@@ -128,9 +135,9 @@ export function mountRack(root: HTMLElement): () => void {
     callout!.textContent = s ? s.label : '';
     callout!.hidden = !s;
     if (s && !reduced) {
-      callout!.classList.remove('pop');
+      callout!.classList.remove('ink-rack-pop');
       void callout!.offsetWidth;
-      callout!.classList.add('pop');
+      callout!.classList.add('ink-rack-pop');
     }
     canvas.style.cursor = s ? 'pointer' : 'grab';
     dirty = true;
@@ -166,7 +173,7 @@ export function mountRack(root: HTMLElement): () => void {
       const dx = e.clientX - dragX;
       const dy = e.clientY - dragY;
       moved = Math.max(moved, Math.abs(dx) + Math.abs(dy));
-      yawT = THREE.MathUtils.clamp(dragStartYaw + dx * 0.007, -0.85, 0.85);
+      yawT = THREE.MathUtils.clamp(dragStartYaw + dx * 0.004, -0.5, 0.5);
       pitchT = THREE.MathUtils.clamp(dragStartPitch + dy * 0.003, -0.15, 0.25);
       return;
     }
@@ -211,13 +218,15 @@ export function mountRack(root: HTMLElement): () => void {
   };
   root.addEventListener('keydown', onKey);
 
-  // The dot screen turns a few degrees as the hero scrolls away.
+  // The dot screen turns a few degrees as the panel scrolls past.
   const onScroll = () => {
     const r = root.getBoundingClientRect();
-    scrollK = THREE.MathUtils.clamp(-r.top / Math.max(1, r.height), 0, 1);
+    const mid = (r.top + r.height / 2) / Math.max(1, innerHeight);
+    scrollK = THREE.MathUtils.clamp(0.5 - mid, -0.6, 0.6);
     dirty = true;
   };
   addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
 
   // ---- layout helpers ---------------------------------------------------
   const v = new THREE.Vector3();
@@ -256,6 +265,8 @@ export function mountRack(root: HTMLElement): () => void {
       const above = r.y0 - ch - 18;
       const y = above > 8 ? above : Math.min(r.y1 + 18, h - ch - 8);
       callout.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
+      const tail = THREE.MathUtils.clamp((r.x0 + r.x1) / 2 - x - 6, 10, cw - 32);
+      callout.style.setProperty('--ink-rack-tail', `${tail.toFixed(0)}px`);
       callout.dataset.below = above > 8 ? '' : 'yes';
     }
   };
@@ -264,7 +275,7 @@ export function mountRack(root: HTMLElement): () => void {
   const render = () => {
     pivot.rotation.set(BASE_PITCH + pitch, BASE_YAW + yaw + lean * 0.06, 0);
     print.uniforms.uAngle.value = 0.785 + scrollK * 0.35 + lean * 0.05;
-    print.uniforms.uCell.value = cellCss * (1 + scrollK * 0.4) * dpr;
+    print.uniforms.uCell.value = cellCss * (1 + Math.abs(scrollK) * 0.3) * dpr;
     scene.updateMatrixWorld();
 
     renderer.setRenderTarget(rtColor);
@@ -280,8 +291,6 @@ export function mountRack(root: HTMLElement): () => void {
     renderer.render(quadScene, quadCam);
     layout();
   };
-
-  const fan = servers.find((s) => s.key === 'gpu')?.group.userData.fan as THREE.Group | undefined;
 
   const tick = (now: number) => {
     raf = requestAnimationFrame(tick);
@@ -319,7 +328,6 @@ export function mountRack(root: HTMLElement): () => void {
           l.mat.uniforms.uBase.value = on ? 0 : 0.85;
         }
       }
-      if (fan) fan.rotation.z -= active?.key === 'gpu' ? 0.9 : 0.25;
       dirty = true;
     }
 
@@ -359,7 +367,7 @@ export function mountRack(root: HTMLElement): () => void {
   } catch {
     // Leave the drawing in place if the GPU says no.
   }
-  root.classList.add('live');
+  root.classList.add('ink-rack--live');
   ro.observe(stage);
   io.observe(root);
 
@@ -393,6 +401,6 @@ export function mountRack(root: HTMLElement): () => void {
     renderer.dispose();
     renderer.forceContextLoss();
     canvas.remove();
-    root.classList.remove('live');
+    root.classList.remove('ink-rack--live');
   };
 }
