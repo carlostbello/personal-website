@@ -1,0 +1,266 @@
+---
+// After hours as a picker: three panels (coffee, guitars, homelab) and
+// one stage that shows whichever toy is picked, so the page stays short.
+// Without JS every toy renders, stacked, and the picker links jump to them.
+import Espresso from '../../components/drawings/Espresso.astro';
+import SignalPath from '../../components/drawings/SignalPath.astro';
+import Rack from '../../components/drawings/Rack.astro';
+import ShotSection from '../pull-a-shot/ShotSection.astro';
+import SignalSection from '../signal-path/SignalSection.astro';
+import RackSection from '../ink-rack/RackSection.astro';
+
+interface Props {
+  heading: string;
+  say?: string;
+  class?: string;
+}
+const { heading, say, class: className } = Astro.props;
+
+const picks = [
+  { id: 'coffee', label: 'Coffee', line: 'Pull a shot on the Gaggia.', Drawing: Espresso },
+  { id: 'guitars', label: 'Guitars', line: 'Plug in and strum.', Drawing: SignalPath },
+  { id: 'homelab', label: 'Homelab', line: 'Poke the rack.', Drawing: Rack },
+];
+---
+<section class:list={['ah', 'wrap', className]} data-say={say} data-ah>
+  <h2 class="lettering ah-head">{heading}</h2>
+
+  <div class="ah-picks" role="tablist" aria-label={heading}>
+    {picks.map((p, i) => (
+      <a
+        class="ah-pick"
+        href={`#ah-${p.id}`}
+        id={`ah-tab-${p.id}`}
+        role="tab"
+        aria-controls={`ah-${p.id}`}
+        aria-selected={i === 0 ? 'true' : 'false'}
+        data-ah-tab={p.id}
+      >
+        <span class="ah-art"><p.Drawing /></span>
+        <span class="ah-label">{p.label}</span>
+        <span class="ah-line">{p.line}</span>
+      </a>
+    ))}
+  </div>
+
+  <div class="ah-stage">
+    <div class="ah-panel" id="ah-coffee" role="tabpanel" aria-labelledby="ah-tab-coffee" data-ah-panel="coffee">
+      <ShotSection />
+    </div>
+    <div class="ah-panel" id="ah-guitars" role="tabpanel" aria-labelledby="ah-tab-guitars" data-ah-panel="guitars">
+      <SignalSection />
+    </div>
+    <div class="ah-panel" id="ah-homelab" role="tabpanel" aria-labelledby="ah-tab-homelab" data-ah-panel="homelab">
+      <RackSection wrap={false} />
+    </div>
+  </div>
+</section>
+
+<script>
+  const KEY = 'ah-pick';
+  let cleanups: Array<() => void> = [];
+
+  function mount(root: HTMLElement) {
+    const tabs = [...root.querySelectorAll<HTMLAnchorElement>('[data-ah-tab]')];
+    const panels = [...root.querySelectorAll<HTMLElement>('[data-ah-panel]')];
+    if (!tabs.length) return;
+
+    const pick = (id: string, focus = false, animate = true) => {
+      tabs.forEach((t) => {
+        const on = t.dataset.ahTab === id;
+        t.setAttribute('aria-selected', String(on));
+        t.tabIndex = on ? 0 : -1;
+        if (on && focus) t.focus();
+      });
+      panels.forEach((p) => {
+        const on = p.dataset.ahPanel === id;
+        p.hidden = !on;
+        p.classList.toggle('ah-in', on && animate);
+      });
+      try {
+        sessionStorage.setItem(KEY, id);
+      } catch {}
+    };
+
+    let start = tabs[0].dataset.ahTab!;
+    try {
+      const saved = sessionStorage.getItem(KEY);
+      if (saved && tabs.some((t) => t.dataset.ahTab === saved)) start = saved;
+    } catch {}
+    root.classList.add('ah-live');
+    pick(start, false, false);
+
+    const onClick = (e: MouseEvent) => {
+      const tab = (e.target as HTMLElement).closest<HTMLAnchorElement>('[data-ah-tab]');
+      if (!tab) return;
+      e.preventDefault();
+      pick(tab.dataset.ahTab!);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      const i = tabs.indexOf(document.activeElement as HTMLAnchorElement);
+      if (i < 0) return;
+      const next = { ArrowRight: i + 1, ArrowDown: i + 1, ArrowLeft: i - 1, ArrowUp: i - 1, Home: 0, End: tabs.length - 1 }[e.key];
+      if (next === undefined) {
+        if (e.key === ' ') {
+          e.preventDefault();
+          pick(tabs[i].dataset.ahTab!);
+        }
+        return;
+      }
+      e.preventDefault();
+      pick(tabs[(next + tabs.length) % tabs.length].dataset.ahTab!, true);
+    };
+    root.addEventListener('click', onClick);
+    root.addEventListener('keydown', onKey);
+    cleanups.push(() => {
+      root.removeEventListener('click', onClick);
+      root.removeEventListener('keydown', onKey);
+    });
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    document.querySelectorAll<HTMLElement>('[data-ah]').forEach(mount);
+  });
+  document.addEventListener('astro:before-swap', () => {
+    cleanups.forEach((c) => c());
+    cleanups = [];
+  });
+</script>
+
+<style>
+  .ah-head {
+    font-size: clamp(2.2rem, 5vw, 3.6rem);
+    margin-bottom: 26px;
+  }
+
+  /* ---------- the three picks ---------- */
+  .ah-picks {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--gutter);
+    margin-bottom: clamp(20px, 3vw, 32px);
+  }
+  .ah-pick {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    column-gap: 14px;
+    align-items: center;
+    padding: 12px 16px;
+    background: var(--page);
+    color: var(--ink);
+    text-decoration: none;
+    transition: transform 0.35s var(--snap);
+  }
+  .ah-pick::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: var(--line) solid var(--ink);
+    pointer-events: none;
+    animation: boil 0.375s steps(1) infinite;
+  }
+  /* Same marigold flood as the panel index. */
+  .ah-pick::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--accent);
+    transform: scaleY(0);
+    transform-origin: 50% 100%;
+    transition: transform 0.4s var(--snap);
+  }
+  .ah-pick:hover::after,
+  .ah-pick:focus-visible::after,
+  .ah-pick[aria-selected='true']::after {
+    transform: scaleY(1);
+  }
+  /* Marigold ink in the drawings would vanish on a marigold card. */
+  .ah-pick :global([stroke='var(--accent)']) {
+    transition: stroke 0.4s var(--snap);
+  }
+  .ah-pick:hover :global([stroke='var(--accent)']),
+  .ah-pick:focus-visible :global([stroke='var(--accent)']),
+  .ah-pick[aria-selected='true'] :global([stroke='var(--accent)']) {
+    stroke: var(--page);
+  }
+  .ah-pick:hover,
+  .ah-pick:focus-visible {
+    transform: translateY(-4px);
+  }
+  .ah-pick[aria-selected='true'] {
+    transform: translateY(-4px) rotate(-0.6deg);
+  }
+  .ah-art {
+    grid-row: 1 / span 2;
+    width: clamp(64px, 9vw, 110px);
+  }
+  .ah-art :global(svg) {
+    width: 100%;
+    height: auto;
+  }
+  .ah-label {
+    font-family: var(--f-letter);
+    font-size: clamp(1.3rem, 2.4vw, 1.9rem);
+    line-height: 1;
+    align-self: end;
+  }
+  .ah-line {
+    font-family: var(--f-hand);
+    font-size: 1.1rem;
+    line-height: 1.2;
+    align-self: start;
+    margin-top: 4px;
+  }
+
+  /* ---------- the stage ---------- */
+  .ah-panel + .ah-panel {
+    margin-top: clamp(40px, 6vw, 64px);
+  }
+  .ah-live .ah-panel + .ah-panel {
+    margin-top: 0;
+  }
+  .ah-panel[hidden] {
+    display: none;
+  }
+  /* The new toy wipes in from the left, like the next panel. */
+  .ah-in {
+    animation: ah-wipe 0.45s var(--snap) both;
+  }
+  @keyframes ah-wipe {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+
+  @media (max-width: 720px) {
+    .ah-picks {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .ah-pick {
+      grid-template-columns: 1fr;
+      justify-items: center;
+      text-align: center;
+      padding: 10px 6px;
+    }
+    .ah-art {
+      grid-row: auto;
+      width: 100%;
+      max-width: 72px;
+    }
+    .ah-label {
+      font-size: 1.05rem;
+      margin-top: 6px;
+    }
+    .ah-line {
+      display: none;
+    }
+  }
+</style>

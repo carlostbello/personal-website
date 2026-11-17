@@ -210,9 +210,23 @@ const cols = panels.map((_, i) => `${widths[i % widths.length]}fr`).join(' ');
     padding: 12px 12px 10px;
     isolation: isolate;
     transform: rotate(var(--tilt, 0deg));
-    transition:
-      transform 0.28s var(--pop),
-      background-color 0.2s;
+    transition: transform 0.35s var(--snap);
+  }
+  /* Marigold floods up from the panel floor on hover, like a fill
+     being laid in. A transform, so it stays smooth. */
+  .pn-thumb::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--accent);
+    transform: scaleY(0);
+    transform-origin: 50% 100%;
+    transition: transform 0.4s var(--snap);
+  }
+  .pn-thumb:hover::after,
+  .pn-thumb:focus-visible::after {
+    transform: scaleY(1);
   }
   .pn-thumb::before {
     content: '';
@@ -233,7 +247,7 @@ const cols = panels.map((_, i) => `${widths[i % widths.length]}fr`).join(' ');
   }
   .pn-thumb:hover,
   .pn-thumb:focus-visible {
-    transform: rotate(0deg) translateY(-6px);
+    transform: rotate(0deg) translateY(-4px);
   }
   .pn-thumb:active {
     transform: translateY(1px) scale(0.97);
