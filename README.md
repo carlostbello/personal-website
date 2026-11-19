@@ -48,13 +48,43 @@ this site.
 - **Homepage copy**: `src/lib/copy.ts`.
 - **Site settings** (email, socials, analytics, newsletter, Substack): `src/lib/site.ts`.
 
+## Media uploads (Cloudflare R2)
+
+Large photos or videos for build journals live in the `carlostbello-media` R2
+bucket served at `https://media.carlostbello.com`:
+
+```sh
+npx wrangler r2 object put carlostbello-media/posts/<file> --file ./<file> --remote
+```
+
 ## Deploy setup (one time)
 
 1. Cloudflare: create an API token with the "Edit Cloudflare Workers" template.
 2. GitHub repo secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
-3. Push to `main`. The worker is named `carlostbello-com` (`wrangler.jsonc`).
-4. In Cloudflare, add `carlostbello.com` as a custom domain on the worker.
-5. Optional: enable Web Analytics and paste the token into `site.ts`.
+3. Push to `main`. The worker is named `carlostbello-com` (`wrangler.jsonc`) and
+   binds `carlostbello.com` automatically.
+4. Optional: enable Web Analytics in the Cloudflare dashboard (auto-injects on
+   the proxied zone) or paste a manual beacon token into `site.ts`.
 
 Deploys stop while `TK` placeholders remain (`lint:copy --strict`). That is on
 purpose.
+
+## Credits & third-party code
+
+- **Stageshow** (`src/stageshow/`): vendored unmodified from
+  [benjitaylor/skills/stageshow](https://github.com/benjitaylor/skills/tree/main/stageshow)
+  under the MIT License (see [LICENSE](src/stageshow/LICENSE),
+  [NOTICE.md](src/stageshow/NOTICE.md), and
+  [kit/brands/SOURCES.md](src/stageshow/kit/brands/SOURCES.md) for bundled SVG
+  brand icon sources and terms).
+- **Fonts** (self-hosted via [Fontsource](https://fontsource.org/)):
+  [Atkinson Hyperlegible Next & Mono](https://www.brailleinstitute.org/freefont/)
+  (Braille Institute, SIL OFL), [Bowlby One](https://fonts.google.com/specimen/Bowlby+One)
+  (Vernon Adams, SIL OFL), and [Patrick Hand](https://fonts.google.com/specimen/Patrick+Hand)
+  (Patrick Wagesreiter, SIL OFL).
+- **Libraries**: built with [Astro](https://astro.build/),
+  [Three.js](https://threejs.org/), [React](https://react.dev/),
+  [Pagefind](https://pagefind.app/), [Satori](https://github.com/vercel/satori),
+  [resvg-js](https://github.com/yisibl/resvg-js), and
+  [Lucide](https://lucide.dev/).
+

@@ -3,6 +3,9 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "carlostbello-com",
   "compatibility_date": "2026-10-19",
+  "routes": [
+    { "pattern": "carlostbello.com", "custom_domain": true }
+  ],
   "assets": {
     "directory": "./dist",
     "html_handling": "drop-trailing-slash",

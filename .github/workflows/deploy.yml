@@ -3,7 +3,12 @@ name: Deploy
 on:
   push:
     branches: [main]
-  # Daily rebuild so future-dated (scheduled) posts go live on their date.
+    paths-ignore:
+      - 'README.md'
+      - 'DESIGN.md'
+      - '.vscode/**'
+  # Daily check so future-dated (scheduled) posts go live on their date,
+  # skipping the build/deploy whenever no post became due in the last 24h.
   schedule:
     - cron: '17 13 * * *'
   workflow_dispatch:
@@ -13,7 +18,41 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      should_deploy: ${{ steps.due.outputs.should_deploy }}
+    steps:
+      - uses: actions/checkout@v4
+        if: github.event_name == 'schedule'
+      - id: due
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" != "schedule" ]; then
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          node -e '
+            const fs = require("node:fs");
+            const now = Date.now();
+            const day = 24 * 60 * 60 * 1000;
+            const due = fs.readdirSync("src/content/log").some((f) => {
+              if (!/\.(md|mdx)$/.test(f)) return false;
+              const txt = fs.readFileSync(`src/content/log/${f}`, "utf8");
+              if (/^draft:\s*true\b/m.test(txt)) return false;
+              const m = txt.match(/^date:\s*(\S+)/m);
+              if (!m) return false;
+              const t = Date.parse(m[1]);
+              return Number.isFinite(t) && t <= now && t > now - day;
+            });
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `should_deploy=${due}\n`);
+          '
+
   deploy:
+    needs: check
+    if: needs.check.outputs.should_deploy == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
