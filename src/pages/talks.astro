@@ -5,7 +5,7 @@ import PageHead from '../components/PageHead.astro';
 import { site } from '../lib/site';
 
 const talks = (await getCollection('talks')).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
-const fmt = new Intl.DateTimeFormat('en', { year: 'numeric', month: 'short', timeZone: 'UTC' });
+const fmt = new Intl.DateTimeFormat('en', { year: 'numeric', timeZone: 'UTC' });
 
 const ld = {
   '@context': 'https://schema.org',
@@ -15,15 +15,16 @@ const ld = {
   sameAs: Object.values(site.social),
 };
 ---
-<Base title="Talks" description="TK Conference talks by Carlos Bello on AI security and offline AI systems." jsonLd={ld}>
-  <PageHead title="Talks" say="TK Where I've been on stage." />
+<Base title="Talks" description="Conference talks and guest university lectures by Carlos Bello on AI security, governance, and operational AI." jsonLd={ld}>
+  <PageHead title="Talks" say="CISO conferences and university guest lectures." />
   <div class="wrap" data-pagefind-body>
     <ul class="talks">
       {talks.map((t, i) => (
         <li class:list={['panel', { accent: i === 0 }]}>
           <span class="caption">{fmt.format(t.data.date)}</span>
           <h2>{t.data.title}</h2>
-          <p>{t.data.event}{t.data.city && `, ${t.data.city}`}</p>
+          <p class="where">{t.data.event}{t.data.city && `, ${t.data.city}`}</p>
+          {t.data.summary && <p class="summary">{t.data.summary}</p>}
           <p class="links">
             {t.data.slides && <a href={t.data.slides}>Slides</a>}
             {t.data.video && <a href={t.data.video}>Video</a>}

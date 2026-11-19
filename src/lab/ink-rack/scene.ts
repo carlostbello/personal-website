@@ -90,11 +90,11 @@ const U = 0.4445; // one rack unit
 const FRONT = 1.15; // every front face lines up here
 
 export const DEFAULT_LABELS: Record<DeviceKey, string> = {
-  xps: 'Dell XPS 8930: hypervisor and NAS',
-  ap: 'UniFi access point: powered by the switch',
-  switch: 'Hasivo 8-port switch: 10 Gb / 2.5 Gb, powers the AP',
-  router: 'Lenovo ThinkCentre Tiny: the router',
-  mac: 'Mac Studio: runs the models and all my development',
+  xps: 'Hypervisor & NAS: VMs, containers, and local storage',
+  ap: 'Access point: house Wi-Fi, powered over PoE from the switch',
+  switch: '10Gb / 2.5Gb switch: links the rack and powers the AP',
+  router: 'Router: firewall and network routing',
+  mac: 'Mac Studio: runs local models and all my development',
 };
 
 export function buildRack(labels: Partial<Record<DeviceKey, string>> = {}) {

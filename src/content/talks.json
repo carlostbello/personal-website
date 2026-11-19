@@ -1,4 +1,37 @@
 [
-  { "id": "tk-talk-1", "title": "TK Talk title", "event": "TK Conference", "date": "2026-05-01", "city": "TK" },
-  { "id": "tk-talk-2", "title": "TK Another talk title", "event": "TK Conference", "date": "2025-10-01", "city": "TK" }
+  {
+    "id": "innovate-scottsdale-2026",
+    "title": "AI Security & Operational AI",
+    "event": "Innovate Cybersecurity",
+    "date": "2026-09-01",
+    "city": "Scottsdale, AZ"
+  },
+  {
+    "id": "innovate-marco-island-2026",
+    "title": "AI Security & Operational AI",
+    "event": "Innovate Cybersecurity",
+    "date": "2026-03-01",
+    "city": "Marco Island, FL"
+  },
+  {
+    "id": "innovate-scottsdale-2025",
+    "title": "AI Security & Operational AI",
+    "event": "Innovate Cybersecurity",
+    "date": "2025-10-01",
+    "city": "Scottsdale, AZ"
+  },
+  {
+    "id": "innovate-nashville-2025",
+    "title": "AI Security & Operational AI",
+    "event": "Innovate Cybersecurity",
+    "date": "2025-05-01",
+    "city": "Nashville, TN"
+  },
+  {
+    "id": "wichita-state-2025",
+    "title": "Applied AI & Security (Guest Lecture)",
+    "event": "Wichita State University, Masters & PhD Seminar",
+    "date": "2025-03-01",
+    "city": "Wichita, KS"
+  }
 ]

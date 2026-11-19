@@ -1,7 +1,7 @@
 export const site = {
   name: 'Carlos Bello',
   url: 'https://carlostbello.com',
-  description: 'TK one-line description used for search results and link previews.',
+  description: 'Carlos Bello — AI Engineering Lead building enterprise AI systems, governance plans, and hardware projects.',
   email: 'hi@carlostbello.com',
   social: {
     github: 'https://github.com/carlostbello',

@@ -20,7 +20,7 @@ writeFileSync(
 title: ${JSON.stringify(title)}
 description: ""
 date: ${today}
-tags: []
+tags: [thoughts] # use "thoughts" or "build journals" (plus project id for build journals)
 draft: true
 ---
 

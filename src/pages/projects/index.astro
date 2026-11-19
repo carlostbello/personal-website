@@ -5,8 +5,8 @@ import PageHead from '../../components/PageHead.astro';
 
 const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
 ---
-<Base title="Projects" description="TK Things Carlos has built.">
-  <PageHead title="Projects" say="TK Some of these even work." />
+<Base title="Projects" description="Software, hardware, and homelab builds by Carlos Bello.">
+  <PageHead title="Projects" say="Things I actually built." />
   <div class="wrap page">
     {projects.map((p) => (
       <a class:list={['panel', 'project', p.data.size, { accent: p.data.size === 'wide' }]} href={`/projects/${p.id}`}>

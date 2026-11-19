@@ -12,8 +12,8 @@ const tagCounts = new Map<string, number>();
 posts.flatMap((p) => p.data.tags).forEach((t) => tagCounts.set(t, (tagCounts.get(t) ?? 0) + 1));
 const tags = [...tagCounts].sort((a, b) => b[1] - a[1]);
 ---
-<Base title="Log" description="TK Writing by Carlos Bello on AI security, offline systems and the things on his bench.">
-  <PageHead title="The log" say="TK Notes, write-ups and the occasional rant." />
+<Base title="Log" description="Build journals and thoughts from Carlos Bello on enterprise AI, security, and hardware projects.">
+  <PageHead title="The log" say="Build journals, notes, and thoughts." />
   <div class="wrap">
     <div class="tools">
       <form class="search" action="/search" role="search">

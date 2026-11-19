@@ -25,10 +25,10 @@ interface Props {
 const signal = home.lab.panels.find((p) => p.caption === 'The signal path');
 
 const defaults: Record<'guitar' | 'drive' | 'echo' | 'amp', Spot> = {
-  guitar: { label: 'Guitar. Click to strum; keys 1 to 6 pick one string.', say: 'TK The guitar I grab first.', hint: 'Click to strum, or drag across.' },
-  drive: { label: 'Drive pedal', say: 'Drive. Makes it dirty.', hint: 'Click to stomp it on.', hintOn: 'On. Strum again.' },
-  echo: { label: 'Echo pedal', say: 'Echo. Says it again.', hint: 'Click to stomp it on.', hintOn: 'On. Strum again.' },
-  amp: { label: 'Amp', say: 'TK The amp.', hint: 'Where it all comes out.' },
+  guitar: { label: 'Strat. Click to strum; keys 1 to 6 pick one string.', say: 'My Strat. The one I grab first.', hint: 'Click to strum, or drag across.' },
+  drive: { label: 'Custom compressor and drive pedal', say: 'Custom compressor & grit.', hint: 'Click to stomp it on.', hintOn: 'On. Strum again.' },
+  echo: { label: 'DIY pi-Stomp pedal', say: 'pi-Stomp. Built it myself.', hint: 'Click to stomp it on.', hintOn: 'On. Strum again.' },
+  amp: { label: 'Amp', say: 'Out to the amp and interface.', hint: 'Where the signal lands.' },
 };
 
 const {

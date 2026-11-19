@@ -1,22 +1,35 @@
 ---
-import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import Narrator from '../components/Narrator.astro';
-import AirGap from '../components/drawings/AirGap.astro';
-import Rack from '../components/drawings/Rack.astro';
-import Espresso from '../components/drawings/Espresso.astro';
-import SignalPath from '../components/drawings/SignalPath.astro';
-import avatar from '../assets/avatar.png';
+import PostList from '../components/PostList.astro';
+import PencilsHero from '../lab/pencils/PencilsHero.astro';
+import PanelIndex from '../lab/panel-nav/PanelIndex.astro';
+import Palette from '../lab/panel-nav/Palette.astro';
+import AfterHours from '../lab/final/AfterHours.astro';
 import { home } from '../lib/copy';
 import { site } from '../lib/site';
-import { getPosts } from '../lib/posts';
-import PostList from '../components/PostList.astro';
+import { getPosts, tagSlug } from '../lib/posts';
 
-const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order).slice(0, 3);
-const posts = (await getPosts()).slice(0, 3);
+const allPosts = await getPosts();
+const posts = allPosts.slice(0, 3);
+const tags = new Set(allPosts.flatMap((p) => p.data.tags.map(tagSlug)));
 
-const drawings = [Rack, Espresso, SignalPath];
+// Each project card points at its code and at its build journal: the log
+// posts tagged with the project's id, when there are any.
+const projects = (await getCollection('projects'))
+  .sort((a, b) => a.data.order - b.data.order)
+  .slice(0, 4)
+  .map((p) => ({
+    ...p,
+    code: p.data.links.find((l) => l.href.startsWith('https://github.com/')),
+    journal: tags.has(p.id) ? `/log/tags/${p.id}` : undefined,
+  }));
+
+const logKinds = [
+  { label: 'Thoughts', slug: 'thoughts' },
+  { label: 'Build journals', slug: 'build-journals' },
+].filter((k) => tags.has(k.slug));
 
 const person = {
   '@context': 'https://schema.org',
@@ -30,147 +43,90 @@ const person = {
 };
 ---
 <Base jsonLd={person}>
-  <section class="hero wrap" data-hero>
-    <h1 class="lettering name">
-      <span>Carlos</span>
-      <span>Bello</span>
-    </h1>
-    <p class="role">{home.role}</p>
-    <div class="who" data-lean>
-      <p class="balloon hello">{home.hello}</p>
-      <Image src={avatar} alt="Cartoon of Carlos grinning with his arms crossed" width={420} height={420} loading="eager" class="me" />
-    </div>
-  </section>
+  <PencilsHero role={home.role} hello={home.hello} />
 
-  <section class="work wrap" data-say={home.narrator.work}>
+  <PanelIndex
+    items={[
+      { label: 'Home', href: '#top' },
+      { label: 'Projects', href: '#projects' },
+      { label: 'Log', href: '#log' },
+      { label: 'Talks', href: '/talks' },
+      { label: 'Search', href: '/search', palette: true },
+    ]}
+  />
+
+  <section class="work wrap beat" data-say={home.narrator.work}>
     <div class="panel work-panel">
       <span class="caption">{home.work.caption}</span>
-      <div class="work-text">
-        <h2 class="lettering">{home.work.heading}</h2>
-        {home.work.body.map((p) => <p>{p}</p>)}
-        <a class="more" href="/talks">{home.work.talksLink}</a>
-      </div>
-      <AirGap />
+      <h2 class="lettering">{home.work.heading}</h2>
+      {home.work.body.map((p) => <p>{p}</p>)}
+      <a class="more" href="/talks">{home.work.talksLink}</a>
     </div>
   </section>
 
-  <section class="lab wrap" data-say={home.narrator.lab}>
-    <h2 class="lettering section-head">{home.lab.heading}</h2>
-    <div class="strip">
-      {home.lab.panels.map((p, i) => {
-        const Drawing = drawings[i];
-        return (
-          <a class="panel strip-panel" href={p.href}>
-            <span class="caption">{p.caption}</span>
-            <Drawing />
-            <p>{p.line}</p>
-          </a>
-        );
-      })}
-    </div>
-  </section>
+  <AfterHours class="beat" heading={home.lab.heading} say={home.narrator.lab} />
 
-  <section class="projects wrap" data-say={home.narrator.projects}>
+  <section class="projects wrap beat" id="projects" tabindex="-1" data-say={home.narrator.projects}>
     <h2 class="lettering section-head">{home.projects.heading}</h2>
     <div class="project-grid">
       {projects.map((p) => (
-        <a class:list={['panel', 'project', p.data.size]} href={`/projects/${p.id}`}>
-          <h3 transition:name={`project-${p.id}`}>{p.data.title}</h3>
+        <article class:list={['panel', 'project', p.data.size]}>
+          <h3 transition:name={`project-${p.id}`}>
+            <a class="project-link" href={`/projects/${p.id}`}>{p.data.title}</a>
+          </h3>
           <p>{p.data.blurb}</p>
-          <span class="year">{p.data.year}</span>
-        </a>
+          <div class="project-foot">
+            <span class="year">{p.data.year}</span>
+            <span class="project-more">
+              {p.journal && <a href={p.journal}>Build journal</a>}
+              {p.code && <a href={p.code.href}>GitHub</a>}
+            </span>
+          </div>
+        </article>
       ))}
     </div>
     <a class="more on-field" href="/projects">{home.projects.all}</a>
   </section>
 
-  <section class="log wrap" data-say={home.narrator.log}>
-    <h2 class="lettering section-head">{home.log.heading}</h2>
+  <section class="log wrap beat" id="log" tabindex="-1" data-say={home.narrator.log}>
+    <div class="log-head">
+      <h2 class="lettering section-head">{home.log.heading}</h2>
+      {logKinds.length > 0 && (
+        <nav class="log-kinds" aria-label="Log categories">
+          {logKinds.map((k) => <a href={`/log/tags/${k.slug}`}>{k.label}</a>)}
+        </nav>
+      )}
+    </div>
     <div class="posts"><PostList posts={posts} showYear /></div>
     <a class="more on-field" href="/log">{home.log.all}</a>
   </section>
 
+  <Palette />
   <Narrator quips={home.quips} />
 </Base>
 
-<style>
-  /* ---------- hero ---------- */
-  .hero {
-    position: relative;
-    display: grid;
-    grid-template-columns: 1fr minmax(240px, 400px);
-    grid-template-rows: 1fr auto;
-    align-items: end;
-    min-height: min(72vh, 660px);
-    padding-top: 24px;
-    border-bottom: var(--line) solid var(--ink);
-  }
-  .name {
-    grid-column: 1;
-    grid-row: 1;
-    align-self: center;
-    font-size: clamp(4rem, 11.5vw, 10rem);
-  }
-  .name span {
-    display: block;
-    animation: stamp 0.5s var(--pop) both;
-  }
-  .name span:nth-child(2) {
-    animation-delay: 0.12s;
-    padding-left: 0.4em;
-  }
-  @keyframes stamp {
-    from {
-      transform: scale(1.35) rotate(-4deg);
-      opacity: 0;
-    }
-  }
-  .role {
-    grid-column: 1;
-    grid-row: 2;
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin-bottom: 28px;
-    animation: rise 0.5s var(--snap) 0.35s both;
-  }
-  .who {
-    grid-column: 2;
-    grid-row: 1 / span 2;
-    position: relative;
-    transform: rotate(var(--lean, 0deg)) translateY(var(--shift, 0));
-    transform-origin: 50% 100%;
-    transition: transform 0.4s var(--snap);
-  }
-  .me {
-    width: 100%;
-    height: auto;
-    margin-bottom: -2px; /* sit on the hero's ink floor */
-    animation: rise 0.7s var(--pop) 0.2s both;
-  }
-  @keyframes rise {
-    from {
-      transform: translateY(40%);
-      opacity: 0;
-    }
-  }
-  .hello {
-    position: absolute;
-    left: -34%;
-    top: 12%;
-    max-width: 250px;
-    z-index: 2;
-    animation: pop-in 0.4s var(--pop) 0.75s both;
-    transform-origin: 80% 100%;
-  }
-  @keyframes pop-in {
-    from {
-      transform: scale(0.4);
-      opacity: 0;
-    }
-  }
+<script>
+  // The shot section asks the corner narrator to react through
+  // 'narrator:say'. Claim the line (and so suppress the section's own
+  // balloon) only when the narrator is on screen.
+  const onSay = (e: Event) => {
+    const nar = document.querySelector<HTMLElement>('[data-narrator]');
+    const line = nar?.querySelector<HTMLElement>('[data-line]');
+    if (!nar || !line || !nar.hasAttribute('data-on') || getComputedStyle(nar).display === 'none') return;
+    line.textContent = String((e as CustomEvent).detail);
+    line.classList.remove('pop');
+    void line.offsetWidth;
+    line.classList.add('pop');
+    e.preventDefault();
+  };
+  document.addEventListener('astro:page-load', () => window.addEventListener('narrator:say', onSay));
+  document.addEventListener('astro:before-swap', () => window.removeEventListener('narrator:say', onSay));
+</script>
 
-  /* ---------- shared ---------- */
-  section + section {
+<style>
+  /* Components put their scripts between sections, so spacing hangs off
+     a class instead of section + section. */
+  :global(.beat) {
     margin-top: clamp(64px, 10vw, 120px);
   }
   .section-head {
@@ -185,62 +141,29 @@ const person = {
   .more::after {
     content: ' →';
   }
+  .on-field {
+    color: var(--page);
+  }
 
-  /* ---------- work ---------- */
   .work-panel {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
-    gap: clamp(20px, 4vw, 48px);
-    align-items: center;
     padding-top: 56px;
   }
   .work-panel h2 {
     font-size: clamp(2rem, 4vw, 3rem);
     margin-bottom: 18px;
   }
-
-  /* ---------- lab strip: uneven panels, like a comic row ---------- */
-  .strip {
-    display: grid;
-    grid-template-columns: 1.15fr 1.4fr 1fr;
-    gap: var(--gutter);
-  }
-  .strip-panel {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding-top: 52px;
-    text-decoration: none;
-    transition: transform 0.3s var(--pop);
-  }
-  .strip-panel:nth-child(1) {
-    transform: rotate(-0.8deg);
-  }
-  .strip-panel:nth-child(3) {
-    transform: rotate(0.7deg);
-    background: var(--accent);
-  }
-  .strip-panel:hover {
-    transform: rotate(0deg) translateY(-6px);
-  }
-  .strip-panel :global(svg) {
-    width: 100%;
-    max-height: 190px;
-    margin-block: 8px 14px;
-  }
-  .strip-panel p {
-    margin: 0;
+  .work-panel p {
+    max-width: var(--measure);
   }
 
-  /* ---------- projects ---------- */
   .project-grid {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
     gap: var(--gutter);
   }
   .project {
-    grid-column: span 3;
-    text-decoration: none;
+    position: relative;
+    grid-column: span 2;
     display: flex;
     flex-direction: column;
     min-height: 200px;
@@ -262,10 +185,40 @@ const person = {
   .project p {
     max-width: 52ch;
   }
-  .year {
+  .project-link {
+    text-decoration: none;
+  }
+  /* The title link covers the whole card; the code and journal links
+     sit above it. */
+  .project-link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  .project-foot {
     margin-top: auto;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .year {
     font-family: var(--f-hand);
     font-size: 1.2rem;
+  }
+  .project-more {
+    position: relative;
+    display: flex;
+    gap: 16px;
+    font-weight: 700;
+  }
+  .project-more a:hover {
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 4px;
+  }
+  .project.wide .project-more a:hover {
+    text-decoration-color: var(--ink);
   }
   .project:hover h3 {
     text-decoration: underline;
@@ -275,48 +228,42 @@ const person = {
   .project.wide:hover h3 {
     text-decoration-color: var(--ink);
   }
-  .on-field {
-    color: var(--page);
+  .log-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 12px 24px;
+    margin-bottom: 26px;
   }
-
-  /* ---------- log ---------- */
+  .log-head .section-head {
+    margin-bottom: 0;
+  }
+  .log-kinds {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .log-kinds a {
+    display: inline-block;
+    background: var(--page);
+    color: var(--ink);
+    border: var(--line) solid var(--ink);
+    padding: 3px 14px;
+    font-family: var(--f-hand);
+    font-size: 1.2rem;
+    text-decoration: none;
+    transition: transform 0.25s var(--snap), background-color 0.25s var(--snap);
+  }
+  .log-kinds a:hover,
+  .log-kinds a:focus-visible {
+    background: var(--accent);
+    transform: translateY(-2px);
+  }
   .posts {
     max-width: 820px;
   }
 
-  /* ---------- small screens ---------- */
   @media (max-width: 820px) {
-    .hero {
-      grid-template-columns: 1fr;
-      grid-template-rows: auto auto auto;
-      min-height: 0;
-    }
-    .name,
-    .role,
-    .who {
-      grid-column: 1;
-      grid-row: auto;
-    }
-    .role {
-      font-size: 1.1rem;
-      margin-bottom: 8px;
-    }
-    .who {
-      width: min(300px, 70%);
-      justify-self: end;
-      margin-top: 40px;
-    }
-    .hello {
-      left: -32%;
-      top: -10%;
-      max-width: 190px;
-      font-size: 1.05rem;
-      padding: 14px 22px;
-    }
-    .work-panel,
-    .strip {
-      grid-template-columns: 1fr;
-    }
     .project,
     .project.wide {
       grid-column: span 6;

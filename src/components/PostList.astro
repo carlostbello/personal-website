@@ -1,5 +1,5 @@
 ---
-import { dateFmt, type Post } from '../lib/posts';
+import { dateFmt, tagSlug, type Post } from '../lib/posts';
 
 interface Props {
   posts: Post[];
@@ -8,38 +8,65 @@ interface Props {
 const { posts, showYear = false } = Astro.props;
 const fmt = showYear ? dateFmt.short : dateFmt.monthDay;
 ---
-<ol class="panel list">
-  {posts.map((post) => (
-    <li>
-      <time datetime={post.data.date.toISOString()}>{fmt.format(post.data.date)}</time>
-      <div>
-        <a href={`/log/${post.id}`}>{post.data.title}</a>
-        {post.data.draft && <span class="flag">draft</span>}
-        <p>{post.data.description}</p>
-      </div>
-    </li>
-  ))}
-</ol>
+{posts.length > 0 ? (
+  <ol class="panel list">
+    {posts.map((post) => (
+      <li>
+        <time datetime={post.data.date.toISOString()}>{fmt.format(post.data.date)}</time>
+        <div>
+          <div class="head">
+            <a class="title" href={`/log/${post.id}`}>{post.data.title}</a>
+            {post.data.draft && <span class="flag">draft</span>}
+          </div>
+          <p>{post.data.description}</p>
+          {post.data.tags.length > 0 && (
+            <ul class="post-tags" aria-label="Tags">
+              {post.data.tags.map((t) => (
+                <li>
+                  <a class:list={['tag', { kind: t === 'thoughts' || t === 'build journals' }]} href={`/log/tags/${tagSlug(t)}`}>
+                    {t}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </li>
+    ))}
+  </ol>
+) : (
+  <div class="panel empty">First posts are on the bench. Check back soon.</div>
+)}
 
 <style>
   .list {
     list-style: none;
     margin: 0;
   }
-  li {
+  .empty {
+    margin: 0;
+    color: var(--ink-soft);
+  }
+  .list > li {
     display: grid;
     grid-template-columns: 110px 1fr;
     gap: 16px;
     padding-block: 12px;
   }
-  li + li {
+  .list > li + li {
     border-top: 2px dashed var(--ink);
   }
   time {
     font-family: var(--f-hand);
     font-size: 1.15rem;
   }
-  a {
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .title {
     font-weight: 700;
     font-size: 1.15rem;
   }
@@ -47,15 +74,40 @@ const fmt = showYear ? dateFmt.short : dateFmt.monthDay;
     margin: 2px 0 0;
     color: var(--ink-soft);
   }
+  .post-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    list-style: none;
+    padding: 0;
+    margin: 8px 0 0;
+  }
+  .tag {
+    display: inline-block;
+    font-family: var(--f-hand);
+    font-size: 0.98rem;
+    line-height: 1.15;
+    padding: 1px 8px;
+    border: 2px solid var(--ink);
+    background: var(--page);
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .tag.kind {
+    background: var(--accent);
+  }
+  .tag:hover {
+    background: var(--ink);
+    color: var(--page);
+  }
   .flag {
-    margin-left: 8px;
     background: var(--accent);
     font-family: var(--f-hand);
     padding: 0 6px;
     border: 2px solid var(--ink);
   }
   @media (max-width: 640px) {
-    li {
+    .list > li {
       grid-template-columns: 1fr;
       gap: 0;
     }
